@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+
+class HomeView extends StatefulWidget {
+  @override
+  _HomeViewState createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  late MapController _mapController;
+  Position? _currentPosition;
+  bool _locationFetched = false;
+  double _currentZoom = 13.0;
+  LatLng _currentCenter = LatLng(28.2096, 83.9856); // Default center point
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Location services are disabled')),
+      );
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location permissions are permanently denied')),
+        );
+        return;
+      }
+
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location permissions are denied')),
+        );
+        return;
+      }
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    setState(() {
+      _currentPosition = position;
+      _locationFetched = true;
+      _currentCenter = LatLng(position.latitude, position.longitude);
+    });
+    _mapController.move(_currentCenter, _currentZoom);
+  }
+
+  void _moveToCurrentLocation() {
+    if (_currentPosition != null) {
+      setState(() {
+        _currentCenter =
+            LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+        _mapController.move(_currentCenter, _currentZoom);
+      });
+    } else {
+      _getCurrentLocation();
+    }
+  }
+
+  void _zoomIn() {
+    setState(() {
+      if (_currentZoom < 18.0) {
+        _currentZoom += 1.0;
+        _mapController.move(_currentCenter, _currentZoom);
+      }
+    });
+  }
+
+  void _zoomOut() {
+    setState(() {
+      if (_currentZoom > 5.0) {
+        _currentZoom -= 1.0;
+        _mapController.move(_currentCenter, _currentZoom);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Ride Sharing Home'),
+      ),
+      body: Stack(
+        children: [
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _currentCenter, // Use initialCenter
+              initialZoom: _currentZoom, // Use initialZoom
+              minZoom: 5.0,
+              maxZoom: 18.0,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: ['a', 'b', 'c'],
+              ),
+              if (_locationFetched)
+                MarkerLayer(
+                  markers: [
+                    // Marker(
+                    //   point: _currentCenter,
+                    //   width: 80.0,
+                    //   height: 80.0,
+                    //   builder: (context,Marker) => Icon(
+                    //     Icons.location_pin,
+                    //     color: Colors.red,
+                    //     size: 40,
+                    //   ),
+                    // ),
+                  ],
+                ),
+            ],
+          ),
+          Positioned(
+            bottom: 30,
+            right: 20,
+            child: Column(
+              children: [
+                FloatingActionButton(
+                  onPressed: _moveToCurrentLocation,
+                  child: Icon(Icons.my_location), // Required 'child' parameter
+                ),
+                SizedBox(height: 10),
+                FloatingActionButton(
+                  onPressed: _zoomIn,
+                  child: Icon(Icons.zoom_in), // Required 'child' parameter
+                ),
+                SizedBox(height: 10),
+                FloatingActionButton(
+                  onPressed: _zoomOut,
+                  child: Icon(Icons.zoom_out), // Required 'child' parameter
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
