@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:geocoding/geocoding.dart'; // Import geocoding package
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:ridesewa/view/drawer.dart';
 
 class HomeView extends StatefulWidget {
   @override
@@ -18,7 +15,7 @@ class _HomeViewState extends State<HomeView> {
   LatLng? _destinationLocation; // Variable to store destination location
   final TextEditingController _searchController = TextEditingController();
   final MapController _mapController = MapController();
-  double _currentZoom = 15.0;
+  double _currentZoom = 17.0; // Increased zoom level for better detail
 
   // Method to get current location using geolocator
   Future<void> _getCurrentLocation() async {
@@ -32,7 +29,6 @@ class _HomeViewState extends State<HomeView> {
         });
       }
     } catch (e) {
-      // Handle errors if needed
       print('Error getting current location: $e');
     }
   }
@@ -51,34 +47,20 @@ class _HomeViewState extends State<HomeView> {
     });
   }
 
-  Future<List<String>> _getSuggestions(String query) async {
-    final response = await http.get(Uri.parse(
-      'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=YOUR_GOOGLE_PLACES_API_KEY',
-    ));
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final predictions = data['predictions'] as List;
-      return predictions.map((prediction) => prediction['description'] as String).toList();
-    } else {
-      throw Exception('Failed to load suggestions');
-    }
-  }
-
-  Future<void> _onSuggestionSelected(String suggestion) async {
+  // Method to search for the place and update the map
+  Future<void> _searchPlace(String query) async {
     try {
-      List<Location> locations = await locationFromAddress(suggestion);
+      List<Location> locations = await locationFromAddress(query);
       if (locations.isNotEmpty) {
         setState(() {
           _destinationLocation = LatLng(locations.first.latitude, locations.first.longitude);
-          if (_destinationLocation != null) {
-            _mapController.move(_destinationLocation!, _currentZoom);
-          }
+          _mapController.move(_destinationLocation!, _currentZoom);
         });
       } else {
-        print('No locations found for the query.');
+        print('No locations found for the query: $query');
       }
     } catch (e) {
-      print('Error searching destination: $e');
+      print('Error searching place: $e');
     }
   }
 
@@ -94,13 +76,19 @@ class _HomeViewState extends State<HomeView> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            // Implement navigation or any desired behavior here
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: Icon(Icons.menu, color: Colors.black),
+              onPressed: () {
+                Scaffold.of(context).openDrawer(); // Ensure this context is within the Scaffold
+              },
+            );
           },
         ),
+        title: Text('Home', style: TextStyle(color: Colors.black)),
       ),
+      drawer: AppDrawer(), // Use the AppDrawer widget here
       body: Stack(
         children: [
           FlutterMap(
@@ -121,12 +109,12 @@ class _HomeViewState extends State<HomeView> {
                     height: 80.0,
                     point: _currentLocation,
                     child: Icon(
-                        Icons.place,
-                        color: Colors.red,
-                        size: 40.0,
-                      ),
+                      Icons.place,
+                      color: Colors.red,
+                      size: 40.0,
+                    ),
                   ),
-                  if (_destinationLocation != null) // Only show destination marker if location is available
+                  if (_destinationLocation != null)
                     Marker(
                       width: 80.0,
                       height: 80.0,
@@ -158,21 +146,18 @@ class _HomeViewState extends State<HomeView> {
                   ),
                 ],
               ),
-              child: TypeAheadField<String>(
-                textFieldConfiguration: TextFieldConfiguration(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search & Setup drop-off location',
-                    border: InputBorder.none,
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search for location',
+                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: () {
+                      _searchPlace(_searchController.text);
+                    },
                   ),
                 ),
-                suggestionsCallback: _getSuggestions,
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    title: Text(suggestion),
-                  );
-                },
-                onSuggestionSelected: _onSuggestionSelected,
               ),
             ),
           ),
