@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ridesewa/controller/app_drawer_controller.dart';
-import 'package:ridesewa/view/HomeView.dart';
-import 'package:ridesewa/view/LogInView.dart';
-import 'package:ridesewa/view/SignUpView.dart';
-import 'package:ridesewa/view/profile_view.dart';
-
-
+import 'package:ridesewa/Dio/dio.dart';
+import 'package:ridesewa/provider/userprovider.dart';
+import 'package:ridesewa/view/changePassword/changepasswrod.dart';
+import 'package:ridesewa/view/home/HomeView.dart';
+import 'package:ridesewa/view/home/adminDashboard.dart';
+import 'package:ridesewa/view/profile/drawer.dart';
+import 'package:ridesewa/view/profile/profile_view.dart'; // Import the admin dashboard view
+import 'package:ridesewa/view/reg/DriverVerificationScreen.dart';
+import 'package:ridesewa/view/reg/LogInView.dart';
+import 'package:ridesewa/view/reg/SignUpView.dart';
 
 void main() {
+  setupDio();
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => AppDrawerController()),
-      ],
+    ChangeNotifierProvider(
+      create: (context) => UserProvider(),
       child: MyApp(),
     ),
   );
@@ -29,13 +31,17 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: LoginView(),
-       routes: {
-      '/login': (context) => LoginView(),
-      '/signup': (context) => SignUpView(), 
-      '/home': (context) => HomeView(),
-      '/profile': (context) => ProfileView(),
-      // other routes
-    }, 
+      routes: {
+        '/login': (context) => LoginView(),
+        '/signup': (context) => SignUpView(), 
+        '/home': (context) => HomeView(),
+        '/profile': (context) => ProfileView(),
+        '/change-password': (context) => ChangePasswordScreen(),
+        '/drawer': (context) => AppDrawer(),
+        '/driver-verification': (context) => DriverVerificationScreen(),
+        '/admin-dashboard': (context) => AdminDashboard(), // Define admin dashboard route
+        // other routes
+      }, 
     );
   }
 }
