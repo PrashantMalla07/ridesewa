@@ -6,7 +6,7 @@ import 'package:ridesewa/view/changePassword/changepasswrod.dart';
 import 'package:ridesewa/view/home/HomeView.dart';
 import 'package:ridesewa/view/home/adminDashboard.dart';
 import 'package:ridesewa/view/profile/drawer.dart';
-import 'package:ridesewa/view/profile/profile_view.dart'; // Import the admin dashboard view
+import 'package:ridesewa/view/profile/profile_view.dart';
 import 'package:ridesewa/view/reg/DriverVerificationScreen.dart';
 import 'package:ridesewa/view/reg/LogInView.dart';
 import 'package:ridesewa/view/reg/SignUpView.dart';
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         '/change-password': (context) => ChangePasswordScreen(),
         '/drawer': (context) => AppDrawer(),
         '/driver-verification': (context) => DriverVerificationScreen(),
-        '/admin-dashboard': (context) => AdminDashboard(), // Define admin dashboard route
+        '/admin-dashboard': (context) => AdminDashboard(), 
         // other routes
       }, 
     );

@@ -16,68 +16,77 @@ class LoginController {
   final Dio dio = Dio(); // Ensure Dio is configured properly elsewhere
   final FlutterSecureStorage storage = FlutterSecureStorage();
 
-Future<void> submitForm(BuildContext context) async {
+  Future<void> submitForm(BuildContext context) async {
     if (formKey.currentState!.validate()) {
-        formKey.currentState!.save();
+      formKey.currentState!.save();
 
-        print('User Login: $identifier');
+      print('User Login: $identifier');
+      print('Password: $password');
 
-        try {
-            final response = await dio.post(
-                'http://192.168.1.112:3000/login',
-                options: Options(
-                    headers: <String, String>{
-                        'Content-Type': 'application/json; charset=UTF-8',
-                    },
-                ),
-                data: jsonEncode(<String, String>{
-                    'identifier': identifier,
-                    'password': password,
-                }),
-            );
+      try {
+        final response = await dio.post(
+          'http://localhost:3000/login', 
+          options: Options(
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+          ),
+          data: jsonEncode(<String, String>{
+            'identifier': identifier,
+            'password': password,
+          }),
+        );
 
-            print('Response Status: ${response.statusCode}');
-            print('Response Body: ${response.data}');
+        print('Response Status: ${response.statusCode}');
+        print('Response Body: ${response.data}');
 
-            if (response.statusCode == 200) {
-                final responseBody = response.data as Map<String, dynamic>;
-                if (responseBody.containsKey('user') && responseBody.containsKey('token')) {
-                    final user = User.fromJson(responseBody['user']);
-                    final token = responseBody['token'];
+        if (response.statusCode == 200) {
+          final responseBody = response.data as Map<String, dynamic>;
 
-                    // Save the user data and token
-                    Provider.of<UserProvider>(context, listen: false).setUser(user);
+          if (responseBody.containsKey('user') && responseBody.containsKey('token')) {
+            final user = User.fromJson(responseBody['user']);
+            final token = responseBody['token'];
 
-                    // Store the token using FlutterSecureStorage
-                    await storage.write(key: 'auth_token', value: token);
+            // Save the user data and token
+            Provider.of<UserProvider>(context, listen: false).setUser(user);
 
-                    // Check if user is admin
-                    if (user.isAdmin) {
-                        Navigator.pushReplacementNamed(context, '/admin-dashboard');
-                    } else {
-                        Navigator.pushReplacementNamed(context, '/home');
-                    }
-                } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('User data or token not found in response')),
-                    );
-                }
+            // Store the token using FlutterSecureStorage
+            await storage.write(key: 'auth_token', value: token);
+
+            // Check if user is admin
+            if (user.isAdmin) {
+              Navigator.pushReplacementNamed(context, '/admin-dashboard');
             } else {
-                final responseBody = response.data as Map<String, dynamic>;
-                final errorMessage = responseBody['message'] ?? 'Login failed';
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(errorMessage)),
-                );
+              Navigator.pushReplacementNamed(context, '/home');
             }
-        } catch (e) {
+          } else {
             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('An error occurred: $e')),
+              SnackBar(content: Text('User data or token not found in response')),
             );
+          }
+        } else {
+          final responseBody = response.data as Map<String, dynamic>;
+          final errorMessage = responseBody['message'] ?? 'Login failed';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage)),
+          );
         }
+      } catch (e) {
+        if (e is DioError) {
+          print('Dio error: ${e.message}');
+          if (e.response != null) {
+            print('Status code: ${e.response?.statusCode}');
+            print('Response data: ${e.response?.data}');
+          }
+        } else {
+          print('Unexpected error: $e');
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An error occurred: $e')),
+        );
+      }
     }
-}
-
-
+  }
 
   String? validateIdentifier(String? value) {
     if (value == null || value.isEmpty) {

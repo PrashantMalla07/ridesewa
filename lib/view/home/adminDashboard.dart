@@ -23,12 +23,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _fetchPendingDrivers() async {
     final token = await storage.read(key: 'auth_token');
+    
     if (token == null) {
-      // Handle missing token
+      // Handle missing token: maybe redirect to login page
+      print('Token is missing');
       setState(() {
         _loading = false;
         _errorOccurred = true;
       });
+      // Optionally navigate to login
+      // Navigator.pushReplacementNamed(context, '/login');
       return;
     }
 
@@ -42,30 +46,37 @@ class _AdminDashboardState extends State<AdminDashboard> {
       );
 
       if (response.statusCode == 200) {
+        // Successfully fetched pending drivers
         setState(() {
           _drivers = json.decode(response.body);
           _loading = false;
         });
       } else {
+        // Server responded with an error
+        print('Error: Status code ${response.statusCode}');
+        print('Response body: ${response.body}');
         throw Exception('Failed to load drivers');
       }
     } catch (e) {
-      // Handle errors here
+      // Log the exception for better debugging
+      print('Error fetching drivers: $e');
       setState(() {
         _loading = false;
         _errorOccurred = true;
       });
-      print('Error fetching drivers: $e');
     }
   }
 
   Future<void> _verifyDriver(int userId, bool isVerified) async {
     final token = await storage.read(key: 'auth_token');
+    
     if (token == null) {
-      // Handle missing token
+      print('Token is missing');
       setState(() {
         _errorOccurred = true;
       });
+      // Optionally navigate to login
+      Navigator.pushReplacementNamed(context, '/login');
       return;
     }
 
@@ -82,20 +93,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
         }),
       );
 
-      // Debug the response
+      // Debugging the response for easier troubleshooting
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        _fetchPendingDrivers(); // Refresh the list
+        _fetchPendingDrivers(); // Refresh the list after verification
       } else {
-        // Log backend error response for better debugging
-        print('Error: ${response.body}');
+        print('Failed to update driver status: ${response.body}');
         throw Exception('Failed to update driver status');
       }
     } catch (e) {
-      // Handle errors here
       print('Error verifying driver: $e');
+      setState(() {
+        _errorOccurred = true;
+      });
     }
   }
 

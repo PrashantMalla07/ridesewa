@@ -89,44 +89,56 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // Method to draw the main and alternative routes from current location to destination
-  Future<void> _drawRoute() async {
-    if (_destinationLocation != null) {
+Future<void> _drawRoute() async {
+  if (_destinationLocation != null) {
+    final url = 'https://router.project-osrm.org/route/v1/driving/'
+        '${_currentLocation.longitude},${_currentLocation.latitude};'
+        '${_destinationLocation!.longitude},${_destinationLocation!.latitude}'
+        '?geometries=geojson&alternatives=2';
+
+    print('Requesting route from: $url'); // Log the request URL
+
+    int retries = 3;
+    for (int i = 0; i < retries; i++) {
       try {
-        final response = await http.get(Uri.parse(
-          'https://router.project-osrm.org/route/v1/driving/${_currentLocation.longitude},${_currentLocation.latitude};${_destinationLocation!.longitude},${_destinationLocation!.latitude}?geometries=geojson&alternatives=2'
-        ));
-        
+        print('Sending request to OSRM...');
+        final response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 15));
+
         if (response.statusCode == 200) {
+          print('Received response from OSRM.');
           final jsonResponse = json.decode(response.body);
-          final List<dynamic> routes = jsonResponse['routes'];
-          
-          setState(() {
-            _mainRoutePoints.clear(); // Clear existing main route points
-            _alternativeRoutePoints.clear(); // Clear existing alternative route points
-            
-            // Store main route
-            if (routes.isNotEmpty) {
-              _mainRoutePoints = routes[0]['geometry']['coordinates']
-                .map<LatLng>((point) => LatLng(point[1], point[0]))
-                .toList();
-            }
-            
-            // Store alternative routes
-            for (var i = 1; i < routes.length && i <= 2; i++) {
-              List<LatLng> alternativePoints = routes[i]['geometry']['coordinates']
-                .map<LatLng>((point) => LatLng(point[1], point[0]))
-                .toList();
-              _alternativeRoutePoints.add(alternativePoints);
-            }
-          });
+          // Process the routes here...
+          print('Successfully fetched routes: $jsonResponse'); // Debug log
+          return; // Exit after successful processing
         } else {
           print('Error fetching routes: ${response.statusCode}');
+          if (response.statusCode == 500) {
+            print('Internal Server Error: Retrying...');
+          }
+          print('Response body: ${response.body}'); // Log the response body for debugging
         }
       } catch (e) {
         print('Error drawing routes: $e');
+        if (i == retries - 1) {
+          print('Max retries reached, unable to fetch routes.');
+        }
       }
+      await Future.delayed(Duration(seconds: 2 * (i + 1))); // Exponential backoff
     }
+  } else {
+    print('Destination location is null');
   }
+}
+
+
+
+List<LatLng> _extractLatLngPoints(dynamic route) {
+  return route['geometry']['coordinates']
+      .map<LatLng>((point) => LatLng(point[1], point[0]))
+      .toList();
+}
+
+
 
   // Method to handle search button press
   void _onSearch() {
@@ -213,19 +225,23 @@ class _HomeViewState extends State<HomeView> {
                 ],
               ),
               PolylineLayer(
-                polylines: [
-                  Polyline(
-                    points: _mainRoutePoints,
-                    strokeWidth: 4.0,
-                    color: Colors.blue, // Main route color
-                  ),
-                  ..._alternativeRoutePoints.map((points) => Polyline(
-                    points: points,
-                    strokeWidth: 3.0,
-                    color: Colors.green.withOpacity(0.5), // Alternative route color
-                  )).toList(),
-                ],
-              ),
+            polylines: [
+              if (_mainRoutePoints.isNotEmpty)
+                Polyline(
+                  points: _mainRoutePoints,
+                  strokeWidth: 4.0,
+                  color: Colors.blue, // Main route color
+                ),
+              ..._alternativeRoutePoints
+                  .where((points) => points.isNotEmpty) // Ensure alternative points are not empty
+                  .map((points) => Polyline(
+                        points: points,
+                        strokeWidth: 3.0,
+                        color: Colors.green.withOpacity(0.5), // Alternative route color
+                      )),
+            ],
+          ),
+
             ],
           ),
           Positioned(

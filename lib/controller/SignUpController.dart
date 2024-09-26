@@ -13,7 +13,7 @@ class SignUpController {
     lastName: '',
     email: '',
     password: '',
-    phoneNumber: '',  // Initialize phone number
+    phoneNumber: '', 
   );
 
   // Function to validate and submit the form
@@ -27,7 +27,7 @@ class SignUpController {
       try {
         // Send a POST request to the backend
         final response = await http.post(
-          Uri.parse('http://192.168.1.112:3000/register'), // Update with your API endpoint
+          Uri.parse('http://192.168.1.112:3000/register'), 
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

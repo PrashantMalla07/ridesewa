@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ridesewa/controller/SignUpController.dart'; // Import the controller
+import 'package:ridesewa/controller/SignUpController.dart'; 
 
 class SignUpView extends StatefulWidget {
   @override

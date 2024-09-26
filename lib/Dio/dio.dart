@@ -17,6 +17,7 @@ class AuthService {
     await storage.delete(key: 'auth_token');
   }
 }
+
 void setupDio() {
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
@@ -30,23 +31,39 @@ void setupDio() {
       handler.next(response); // Pass the response to the next interceptor
     },
     onError: (DioError error, ErrorInterceptorHandler handler) {
+      // Log more detailed information about the error
+      print('Dio error occurred: ${error.message}');
+      if (error.response != null) {
+        print('Status code: ${error.response?.statusCode}');
+        print('Response data: ${error.response?.data}');
+        print('Headers: ${error.response?.headers}');
+      } else {
+        print('Error sending request: ${error.message}');
+      }
       handler.next(error); // Pass the error to the next handler
     },
   ));
 }
 
-
 Future<void> changePassword() async {
   try {
     final response = await dio.post(
-      'http://localhost:3000/change-password',
+      'http://10.0.2.2:3000/change-password', // Use the correct IP address for Android emulator
       data: {
         'new_password': 'newPassword123',
       },
     );
 
-    print(response.data);
+    print('Response data: ${response.data}');
   } catch (e) {
-    print('Error: $e');
+    if (e is DioError) {
+      print('Dio error occurred: ${e.message}');
+      if (e.response != null) {
+        print('Status code: ${e.response?.statusCode}');
+        print('Response data: ${e.response?.data}');
+      }
+    } else {
+      print('General error: $e');
+    }
   }
 }

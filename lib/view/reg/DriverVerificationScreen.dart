@@ -42,7 +42,9 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
       _formKey.currentState!.save();
 
       try {
-        final uri = Uri.parse('http://localhost:3000/api/driver-verification'); // Replace with your actual API endpoint
+        // Update the URL if necessary
+        final uri = Uri.parse('http://10.0.2.2:3000/api/verify-driver'); 
+
         final request = http.MultipartRequest('POST', uri)
           ..fields['licenseNumber'] = licenseNumber ?? ''
           ..fields['citizenshipId'] = citizenshipId ?? ''
@@ -69,13 +71,15 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
         }
 
         final response = await request.send();
+
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Driver verification submitted successfully')),
           );
           // Navigate or perform any other action
         } else {
-          throw Exception('Failed to submit verification');
+          final responseBody = await response.stream.bytesToString();
+          throw Exception('Failed to submit verification. Status code: ${response.statusCode}. Response: $responseBody');
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
