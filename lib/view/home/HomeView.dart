@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:ridesewa/view/home/ride_request.dart';
 import 'package:ridesewa/view/profile/drawer.dart';
 
 class HomeView extends StatefulWidget {
@@ -380,6 +381,10 @@ List<LatLng> _extractLatLngPoints(dynamic route) {
                                         ? null // Disable button if no ride is selected
                                         : () {
                                             print('Ride started from ${_currentLocation.toString()} to ${_destinationLocation.toString()} with $_selectedRide');
+                                             Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => RideRequestScreen()),
+                                          );
                                           },
                                     child: Text('Find a Driver'),
                                   ),

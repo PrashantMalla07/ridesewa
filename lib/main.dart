@@ -5,6 +5,7 @@ import 'package:ridesewa/provider/userprovider.dart';
 import 'package:ridesewa/view/changePassword/changepasswrod.dart';
 import 'package:ridesewa/view/home/HomeView.dart';
 import 'package:ridesewa/view/home/adminDashboard.dart';
+import 'package:ridesewa/view/home/ride_request.dart';
 import 'package:ridesewa/view/profile/drawer.dart';
 import 'package:ridesewa/view/profile/profile_view.dart';
 import 'package:ridesewa/view/reg/DriverVerificationScreen.dart';
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: LoginView(),
+      home: HomeView(),
       routes: {
         '/login': (context) => LoginView(),
         '/signup': (context) => SignUpView(), 
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         '/drawer': (context) => AppDrawer(),
         '/driver-verification': (context) => DriverVerificationScreen(),
         '/admin-dashboard': (context) => AdminDashboard(), 
+        '/accept-ride':(context)=>RideRequestScreen(),
         // other routes
       }, 
     );

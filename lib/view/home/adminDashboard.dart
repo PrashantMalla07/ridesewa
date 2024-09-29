@@ -25,13 +25,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final token = await storage.read(key: 'auth_token');
     
     if (token == null) {
-      // Handle missing token: maybe redirect to login page
+      
       print('Token is missing');
       setState(() {
         _loading = false;
         _errorOccurred = true;
       });
-      // Optionally navigate to login
+      
       // Navigator.pushReplacementNamed(context, '/login');
       return;
     }
@@ -46,19 +46,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
       );
 
       if (response.statusCode == 200) {
-        // Successfully fetched pending drivers
+       
         setState(() {
           _drivers = json.decode(response.body);
           _loading = false;
         });
       } else {
-        // Server responded with an error
+        
         print('Error: Status code ${response.statusCode}');
         print('Response body: ${response.body}');
         throw Exception('Failed to load drivers');
       }
     } catch (e) {
-      // Log the exception for better debugging
+      
       print('Error fetching drivers: $e');
       setState(() {
         _loading = false;
@@ -93,12 +93,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
         }),
       );
 
-      // Debugging the response for easier troubleshooting
+      
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        _fetchPendingDrivers(); // Refresh the list after verification
+        _fetchPendingDrivers(); 
       } else {
         print('Failed to update driver status: ${response.body}');
         throw Exception('Failed to update driver status');
