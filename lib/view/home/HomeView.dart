@@ -5,7 +5,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import 'package:ridesewa/view/home/ride_request.dart';
 import 'package:ridesewa/view/profile/drawer.dart';
 
 class HomeView extends StatefulWidget {
@@ -90,27 +89,18 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // Method to draw the main and alternative routes from current location to destination
-Future<void> _drawRoute() async {
-  if (_destinationLocation != null) {
-    final url = 'https://router.project-osrm.org/route/v1/driving/'
-        '${_currentLocation.longitude},${_currentLocation.latitude};'
-        '${_destinationLocation!.longitude},${_destinationLocation!.latitude}'
-        '?geometries=geojson&alternatives=2';
+  Future<void> _drawRoute() async {
+    if (_destinationLocation != null) {
+      final url = 'https://router.project-osrm.org/route/v1/driving/'
+          '${_currentLocation.longitude},${_currentLocation.latitude};'
+          '${_destinationLocation!.longitude},${_destinationLocation!.latitude}'
+          '?geometries=geojson&alternatives=2';
 
-    print('Requesting route from: $url'); // Log the request URL
-
-    int retries = 3;
-    for (int i = 0; i < retries; i++) {
       try {
-        print('Sending request to OSRM...');
         final response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 15));
-
         if (response.statusCode == 200) {
-          print('Received response from OSRM.');
           final jsonResponse = json.decode(response.body);
           // Process the routes here...
-          print('Successfully fetched routes: $jsonResponse'); // Debug log
-          return; // Exit after successful processing
         } else {
           print('Error fetching routes: ${response.statusCode}');
           if (response.statusCode == 500) {
