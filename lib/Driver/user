@@ -1,127 +1,92 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import 'package:ridesewa/Driver/reach_location.dart';
 
 class RideAcceptedPage extends StatefulWidget {
-  final LatLng driverLocation;
+  final LatLng driverLocation; // Add the driverLocation parameter
   final LatLng userLocation;
-  final LatLng destination;
 
+  // Constructor for RideAcceptedPage
   RideAcceptedPage({
-    required this.driverLocation,
-    required this.userLocation,
-    required this.destination,
+    required this.driverLocation, // Initialize driverLocation
+    required this.userLocation,   // Initialize userLocation
   });
 
   @override
   _RideAcceptedPageState createState() => _RideAcceptedPageState();
 }
 
-class _RideAcceptedPageState extends State<RideAcceptedPage>
-    with SingleTickerProviderStateMixin {
+class _RideAcceptedPageState extends State<RideAcceptedPage> {
   final MapController _mapController = MapController();
   double _currentZoom = 15.0;
 
-  List<LatLng> routePoints = [];
-  String _eta = '';
-  String _distance = '';
-  LatLng? _driverLocation;
-  late AnimationController _animationController;
-  Animation<LatLng>? _locationAnimation;
-  Timer? _animationTimer;
-
-  bool _isAnimationControllerReady = false; // Flag to track controller readiness
-  bool _isRouteReady = false; // Flag to track if the route is ready
+  List<LatLng> routePoints = []; // For storing the route polyline
+  String _eta = ''; // State variable to store the estimated time of arrival
+  String _distance = ''; // State variable to store the distance between driver and user
+  LatLng? _driverLocation; // Will store the driver's current location
 
   @override
   void initState() {
     super.initState();
-
-    _driverLocation = widget.driverLocation;
-
-    // Initialize the AnimationController
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: 2),
-    )..addListener(() {
-        if (_isAnimationControllerReady) {
-          setState(() {
-            _driverLocation = _locationAnimation?.value;
-          });
-        }
-      });
-
-    // Mark the controller as ready
-    _isAnimationControllerReady = true;
-
-    // Fetch the route after initializing the AnimationController
-    _fetchRoute();
+    _getDriverLocation(); // Get the initial driver location
+    _fetchRoute(); // Fetch the route
+    _startLocationTracking(); // Start tracking the driver's location periodically
   }
 
-  void _startRide() {
-    // Ensure AnimationController is initialized and route is available
-    if (!_isAnimationControllerReady) {
-      print('AnimationController is not ready yet.');
+  // Function to fetch the current location of the driver using geolocator
+  Future<void> _getDriverLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // If location services are not enabled, return early
+      print("Location services are disabled.");
       return;
     }
 
-    if (!_isRouteReady) {
-      print('Route is not ready.');
-      return;
-    }
-
-    int currentIndex = 0;
-
-    // Timer to update the driver's position every 2 seconds
-    _animationTimer = Timer.periodic(Duration(seconds: 2), (timer) {
-      if (currentIndex < routePoints.length - 1) {
-        final startPoint = routePoints[currentIndex];
-        final endPoint = routePoints[currentIndex + 1];
-
-        // Setup the LatLngTween animation
-        _locationAnimation = LatLngTween(
-          begin: startPoint,
-          end: endPoint,
-        ).animate(_animationController);
-
-        // Reset and start the animation
-        _animationController.reset();
-        _animationController.forward();
-
-        // Update the current index
-        currentIndex++;
-      } else {
-        // If the destination is reached, stop the animation
-        timer.cancel();
-        print('Driver reached user location.');
-
-        // Navigate to the next page after the driver reaches the user
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DriverAtUserLocationPage(
-              driverLocation: _driverLocation!,
-              userLocation: widget.userLocation, destination: widget.destination,
-            ),
-          ),
-        );
+    // Check location permission
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // If permission is denied, return early
+        print("Location permission denied.");
+        return;
       }
+    }
+
+    // Get current position (driver's location)
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    setState(() {
+      _driverLocation = LatLng(position.latitude, position.longitude); // Update the driver's location
     });
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    _animationTimer?.cancel();
-    super.dispose();
+  // Periodically update the driver's location every 5 seconds
+  void _startLocationTracking() {
+    // Update the driver's location every 5 seconds
+    Future.delayed(Duration(seconds: 5), () async {
+      await _getDriverLocation();
+      _fetchRoute(); // Fetch the route again after location update
+      _startLocationTracking(); // Keep tracking the location
+    });
   }
 
+  // Fetch route and ETA details between the driver and the user
   Future<void> _fetchRoute() async {
+    if (_driverLocation == null) {
+      return; // Wait for the driver location to be fetched
+    }
+
     final osrmUrl =
         'http://router.project-osrm.org/route/v1/driving/${_driverLocation!.longitude},${_driverLocation!.latitude};${widget.userLocation.longitude},${widget.userLocation.latitude}?overview=full&geometries=polyline';
 
@@ -129,26 +94,21 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
       final response = await http.get(Uri.parse(osrmUrl));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final polyline = data['routes'][0]['geometry'];
-        final distanceInMeters = data['routes'][0]['distance'];
-        final durationInSeconds = data['routes'][0]['duration'];
+        final polyline = data['routes'][0]['geometry']; // Encoded polyline
+        final distanceInMeters = data['routes'][0]['distance']; // Distance in meters
+        final durationInSeconds = data['routes'][0]['duration']; // Duration in seconds
 
+        // Convert distance to kilometers and format it
         final distanceInKilometers = distanceInMeters / 1000;
         final durationInMinutes = (durationInSeconds / 60).floor();
         final durationInSecs = (durationInSeconds % 60).floor();
 
         setState(() {
-          _distance = distanceInKilometers.toStringAsFixed(2);
-          _eta =
-              '$durationInMinutes min ${durationInSecs.toString().padLeft(2, '0')} sec';
-          routePoints = _decodePolyline(polyline);
-          _isRouteReady = true; // Mark the route as ready
+          _distance = distanceInKilometers.toStringAsFixed(2); // 2 decimal places
+          _eta = '$durationInMinutes min ${durationInSecs.toString().padLeft(2, '0')} sec'; // Calculate ETA
         });
 
-        // Start the ride once the route is ready
-        if (_isRouteReady) {
-          _startRide();
-        }
+        routePoints = _decodePolyline(polyline);
       } else {
         print('Failed to fetch route: ${response.body}');
       }
@@ -157,10 +117,46 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
     }
   }
 
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> points = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+
+    return points;
+  }
+
+  void _startRide() {
+    // Implement the start ride functionality here
+    print('Ride started...');
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_driverLocation == null) {
-      return Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator()); // Show loading until driver location is fetched
     }
 
     return Scaffold(
@@ -177,8 +173,9 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
             ),
             children: [
               TileLayer(
-                urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-              ),
+              urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            ),
+
               MarkerLayer(
                 markers: [
                   Marker(
@@ -205,12 +202,11 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
               ),
               PolylineLayer(
                 polylines: [
-                  if (_driverLocation != null) // Only show polyline if the driver is moving
-                    Polyline(
-                      points: routePoints,
-                      strokeWidth: 4.0,
-                      color: Colors.blue,
-                    ),
+                  Polyline(
+                    points: routePoints,
+                    strokeWidth: 4.0,
+                    color: Colors.blue,
+                  ),
                 ],
               ),
             ],
@@ -291,12 +287,7 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
                   SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: _startRide,
-                    child: Text('Start Destination'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: EdgeInsets.symmetric(vertical: 12.0),
-                      textStyle: TextStyle(fontSize: 16),
-                    ),
+                    child: Text('Start Ride'),
                   ),
                 ],
               ),
@@ -305,38 +296,5 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
         ],
       ),
     );
-  }
-
-  List<LatLng> _decodePolyline(String encoded) {
-    List<LatLng> points = [];
-    int index = 0;
-    int len = encoded.length;
-    int lat = 0;
-    int lng = 0;
-
-    while (index < len) {
-      int b, shift = 0, result = 0;
-      do {
-        b = encoded.codeUnitAt(index) - 63;
-        index++;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-
-      shift = 0;
-      result = 0;
-      do {
-        b = encoded.codeUnitAt(index) - 63;
-        index++;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-
-      points.add(LatLng(lat / 1E5, lng / 1E5));
-    }
-
-    return points;
   }
 }

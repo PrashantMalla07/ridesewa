@@ -5,17 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import 'package:ridesewa/Driver/reach_location.dart';
 
 class RideAcceptedPage extends StatefulWidget {
   final LatLng driverLocation;
   final LatLng userLocation;
-  final LatLng destination;
 
   RideAcceptedPage({
     required this.driverLocation,
     required this.userLocation,
-    required this.destination,
   });
 
   @override
@@ -99,17 +96,6 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
         // If the destination is reached, stop the animation
         timer.cancel();
         print('Driver reached user location.');
-
-        // Navigate to the next page after the driver reaches the user
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DriverAtUserLocationPage(
-              driverLocation: _driverLocation!,
-              userLocation: widget.userLocation, destination: widget.destination,
-            ),
-          ),
-        );
       }
     });
   }
@@ -291,12 +277,7 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
                   SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: _startRide,
-                    child: Text('Start Destination'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: EdgeInsets.symmetric(vertical: 12.0),
-                      textStyle: TextStyle(fontSize: 16),
-                    ),
+                    child: Text('Start Ride'),
                   ),
                 ],
               ),
@@ -309,34 +290,31 @@ class _RideAcceptedPageState extends State<RideAcceptedPage>
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> points = [];
-    int index = 0;
-    int len = encoded.length;
-    int lat = 0;
-    int lng = 0;
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
 
     while (index < len) {
       int b, shift = 0, result = 0;
       do {
-        b = encoded.codeUnitAt(index) - 63;
-        index++;
+        b = encoded.codeUnitAt(index++) - 63;
         result |= (b & 0x1f) << shift;
         shift += 5;
       } while (b >= 0x20);
-      lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
 
       shift = 0;
       result = 0;
       do {
-        b = encoded.codeUnitAt(index) - 63;
-        index++;
+        b = encoded.codeUnitAt(index++) - 63;
         result |= (b & 0x1f) << shift;
         shift += 5;
       } while (b >= 0x20);
-      lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
 
       points.add(LatLng(lat / 1E5, lng / 1E5));
     }
-
     return points;
   }
 }

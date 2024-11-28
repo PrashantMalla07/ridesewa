@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ridesewa/controller/LoginController.dart'; 
+import 'package:ridesewa/controller/LoginController.dart';
 
 class LoginView extends StatefulWidget {
   @override
@@ -14,6 +14,8 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -26,58 +28,88 @@ class _LoginViewState extends State<LoginView> {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: controller.formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Login',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Form(
+            key: controller.formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Logo at the top
+                Center(
+                  child: Image.asset(
+                    'assets/logo.png', // Make sure to place the logo.png in the assets folder
+                    height: 150, // Adjust size as needed
+                  ),
                 ),
-              ),
-              SizedBox(height: 30),
-              // Identifier (Email or Phone Number)
-              _buildTextField(
-                'Email or Phone Number',
-                Icons.person_outline,
-                (value) => controller.identifier = value!, // Use 'identifier'
-                controller.validateIdentifier,
-              ),
-              SizedBox(height: 20),
-              // Password Field
-              _buildPasswordField(
-                'Password',
-                Icons.lock_outline,
-                (value) => controller.password = value!,
-                controller.validatePassword,
-                _isPasswordVisible,
-                () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-              ),
-              SizedBox(height: 40),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.submitForm(context);
-                  },
-                  child: Text('Login'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF001A72),
-                    padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+               
+                Text(
+                  'Welcome!',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.08, // Responsive font size
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Login to your account',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.045, // Responsive font size
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(height: 40),
+                // Username or Phone Numbers
+                _buildTextField(
+                  'Username',
+                  Icons.person_outline,
+                  (value) => controller.identifier = value!,
+                  controller.validateIdentifier,
+                ),
+                SizedBox(height: 20),
+                // Password Field
+                _buildPasswordField(
+                  'Password',
+                  Icons.lock_outline,
+                  (value) => controller.password = value!,
+                  controller.validatePassword,
+                  _isPasswordVisible,
+                  () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                ),
+                SizedBox(height: 30),
+                // Login Button
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      controller.submitForm(context);
+                    },
+                    child: Text('Login'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF001A72),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.25, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(height: 20),
-              Center(
-                child: GestureDetector(
+                SizedBox(height: 10),
+                // Forgot Password
+                TextButton(
+                  onPressed: () {
+                    // Handle forgot password
+                  },
+                  child: Text(
+                    'Forgot your password?',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Sign up link
+                GestureDetector(
                   onTap: () {
                     Navigator.pushNamed(context, '/signup'); // Navigate to sign up screen
                   },
@@ -95,8 +127,8 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -105,22 +137,27 @@ class _LoginViewState extends State<LoginView> {
 
   // Method to build general text fields
   Widget _buildTextField(String hintText, IconData icon, Function(String?) onSaved, String? Function(String?)? validator) {
-    return TextFormField(
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon),
-        hintText: hintText,
-        contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.grey),
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05), // 5% padding on both sides
+      child: TextFormField(
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon),
+          hintText: hintText,
+          contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.blue),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.blue),
-        ),
+        onSaved: onSaved,
+        validator: validator,
       ),
-      onSaved: onSaved,
-      validator: validator,
     );
   }
 
@@ -133,29 +170,34 @@ class _LoginViewState extends State<LoginView> {
     bool isPasswordVisible,
     VoidCallback toggleVisibility,
   ) {
-    return TextFormField(
-      obscureText: !isPasswordVisible,  // Toggle based on visibility state
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon),
-        suffixIcon: IconButton(
-          icon: Icon(
-            isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05), // 5% padding on both sides
+      child: TextFormField(
+        obscureText: !isPasswordVisible, // Toggle based on visibility state
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon),
+          suffixIcon: IconButton(
+            icon: Icon(
+              isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            ),
+            onPressed: toggleVisibility,
           ),
-          onPressed: toggleVisibility,
+          hintText: hintText,
+          contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.blue),
+          ),
         ),
-        hintText: hintText,
-        contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.grey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.blue),
-        ),
+        onSaved: onSaved,
+        validator: validator,
       ),
-      onSaved: onSaved,
-      validator: validator,
     );
   }
 }

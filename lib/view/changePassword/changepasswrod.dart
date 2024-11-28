@@ -48,7 +48,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         final token = await _secureStorage.read(key: 'auth_token');
 
         final response = await _dio.post(
-          'http://192.168.1.112:3000/change-password',
+          'http://localhost:3000/change-password',
           data: {
             'currentPassword': _currentPasswordController.text.trim(),
             'newPassword': newPassword,

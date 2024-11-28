@@ -27,7 +27,7 @@ class SignUpController {
       try {
         // Send a POST request to the backend
         final response = await http.post(
-          Uri.parse('http://192.168.1.112:3000/register'), 
+          Uri.parse('http://localhost:3000/register'), 
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

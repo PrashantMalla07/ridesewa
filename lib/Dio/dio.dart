@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart'; // Required for accessing DefaultHttpClientAdapter
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final Dio dio = Dio();
@@ -19,6 +20,13 @@ class AuthService {
 }
 
 void setupDio() {
+  // Configure SSL/TLS bypass for development
+  (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+    client.badCertificateCallback = (cert, host, port) => true;
+    return client;
+  };
+
+  // Add interceptors for token management and error handling
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
       final token = await AuthService().getToken();
@@ -48,7 +56,7 @@ void setupDio() {
 Future<void> changePassword() async {
   try {
     final response = await dio.post(
-      'http://10.0.2.2:3000/change-password', // Use the correct IP address for Android emulator
+      'http://10.0.2.2:3000/change-password', // Use 10.0.2.2 for Android emulator
       data: {
         'new_password': 'newPassword123',
       },
