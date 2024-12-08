@@ -111,17 +111,17 @@ class _DriverDrawerState extends State<DriverDrawer> {
               leading: const Icon(Icons.support_agent),
               title: const Text("Help & Support"),
               onTap: () {
-                Navigator.pop(context);
-                // Navigate to Help Page
-              },
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/help-support');
+            },
             ),
             ListTile(
               leading: const Icon(Icons.policy),
               title: const Text("Privacy Policy"),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to Privacy Policy Page
-              },
+               onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/privacy-policy');
+            },
             ),
             ListTile(
               leading: const Icon(Icons.logout),

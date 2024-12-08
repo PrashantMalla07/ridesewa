@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:ridesewa/Dio/dio.dart'; // Ensure Dio setup is correct
 import 'package:ridesewa/Driver/driver_homepage.dart'; // Ensure correct import path
 import 'package:ridesewa/Driver/waiting_adminreq.dart'; // Ensure correct import path
+import 'package:ridesewa/const/driver_resources.dart';
+import 'package:ridesewa/const/help_support.dart';
+import 'package:ridesewa/const/privacy_policy.dart';
 import 'package:ridesewa/provider/driverprovider.dart';
 import 'package:ridesewa/provider/userprovider.dart';
 import 'package:ridesewa/provider/walt_through_provider.dart';
@@ -56,6 +59,9 @@ Widget build(BuildContext context) {
       '/admin-dashboard': (context) => AdminDashboard(),
       '/driver-home': (context) => DriverHomeView(),
       '/waiting-for-approval': (context) => WaitingForadminapproval(),
+      '/help-support': (context) => HelpSupportPage(),
+        '/privacy-policy': (context) => PrivacyPolicyPage(),
+         '/resources': (context) => DriverResourcesPage(),
     },
   );
 }

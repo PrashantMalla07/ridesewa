@@ -128,7 +128,9 @@ class _RideRequestsPageState extends State<RideRequestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Ride Requests')),
+      
+      appBar: AppBar(//automaticallyImplyLeading: false,
+      title: Text('Ride Requests')),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _hasError
