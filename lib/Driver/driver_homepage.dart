@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:ridesewa/Driver/driver_drawer.dart';
 import 'package:ridesewa/Driver/ride_request.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DriverHomeView extends StatefulWidget {
   @override
@@ -13,6 +15,7 @@ class _DriverHomeViewState extends State<DriverHomeView> {
   LatLng _currentLocation = LatLng(28.2096, 83.9856);
   final MapController _mapController = MapController();
   double _currentZoom = 15.0;
+  bool isOnline = false;
 
   @override
   void initState() {
@@ -34,10 +37,29 @@ class _DriverHomeViewState extends State<DriverHomeView> {
       print('Error getting current location: $e');
     }
   }
+   // Define the logout function
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('authToken'); // Remove the authentication token or any other saved data
+    // Redirect to the login page or any other page
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Driver Dashboard"),
+      ),
+      drawer: DriverDrawer(
+      //   onStatusToggle: (value) {
+      //     setState(() {
+      //       isOnline = value;
+      //     });
+      //   },
+      //   onLogout: _logout, // Provide the logout function
+      ), 
       body: Stack(
         children: [
           FlutterMap(

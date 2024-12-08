@@ -17,53 +17,51 @@ class _AppDrawerState extends State<AppDrawer> {
     final user = Provider.of<UserProvider>(context).user;
 
     // Function to fetch user status
-    Future<void> checkUserStatus(BuildContext context) async {
-      try {
-        final client = HttpClient();
-        client.badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Allow all certificates
+HttpClient createHttpClient() {
+  final client = HttpClient();
+  client.badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Trust all certificates
+  client.connectionTimeout = const Duration(seconds: 30); // Increase the timeout
+  return client;
+}
+Future<void> checkUserStatus(BuildContext context) async {
+  try {
+    final ioClient = http.IOClient(createHttpClient());
 
-        final ioClient = http.IOClient(client);  // Use IOClient with the HttpClient
+    final response = await ioClient.post(
+      Uri.parse('https://localhost:3000/api/user-status'),
+      headers: {
+        'Authorization': 'Bearer ${user?.token}', // Assuming you have a token for the authenticated user
+     
+      },
+    );
 
-        final response = await ioClient.get(
-          Uri.parse('https://localhost:3000/api/user-status'),
-          headers: {
-            'Authorization': 'Bearer ${user?.token}', // Assuming you have a token for the authenticated user
-          },
-        );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
 
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
+      if (data.containsKey('isDriver') && data['isDriver'] != null) {
+        final isDriver = data['isDriver'] == 1;
+        final driverStatus = data['driverStatus'];
+        final verificationDataFilled = data['verificationDataFilled'] == 1;
 
-          // Ensure that data contains 'isDriver' and 'driverStatus'
-          if (data.containsKey('isDriver') && data['isDriver'] != null) {
-            if (data['isDriver']) {
-              // If the user is already a driver, navigate to the driver home page
-              Navigator.pushReplacementNamed(context, '/driver-home');
-            } else if (data.containsKey('driverStatus')) {
-              if (data['driverStatus'] == 'pending') {
-                // If the user has filled the form but approval is pending
-                Navigator.pushReplacementNamed(context, '/waiting-for-approval');
-              } else {
-                // If the form isn't filled, navigate to the driver verification page
-                Navigator.pushReplacementNamed(context, '/driver-verification');
-              }
-            } else {
-              // If 'driverStatus' is missing, navigate to a default page or show an error
-              print("Response doesn't contain 'driverStatus' field.");
-            }
-          } else {
-            // Handle the case when 'isDriver' is not in the response
-            print("Response doesn't contain the 'isDriver' field.");
-          }
+        if (isDriver && verificationDataFilled) {
+          Navigator.pushReplacementNamed(context, '/driver-home');
+        } else if (!isDriver && driverStatus == 'pending' && verificationDataFilled) {
+          Navigator.pushReplacementNamed(context, '/waiting-for-approval');
+        } else if (!isDriver && driverStatus == 'pending' && !verificationDataFilled) {
+          Navigator.pushReplacementNamed(context, '/driver-verification');
         } else {
-          // Handle failed response (e.g., status code != 200)
-          print("Error: ${response.statusCode}");
+          print("Unexpected user status: isDriver: $isDriver, driverStatus: $driverStatus, verificationDataFilled: $verificationDataFilled");
         }
-      } catch (error) {
-        // Handle network or other errors
-        print('Error fetching user status: $error');
+      } else {
+        print("Response doesn't contain the 'isDriver' field.");
       }
+    } else {
+      print("Error: ${response.statusCode}");
     }
+  } catch (error) {
+    print('Error fetching user status: $error');
+  }
+}
 
     return Drawer(
       child: Column(

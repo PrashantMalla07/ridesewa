@@ -18,12 +18,7 @@ class _SignUpViewState extends State<SignUpView> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context); // Navigate back
-          },
-        ),
+        
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),

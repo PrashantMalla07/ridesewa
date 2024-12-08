@@ -139,6 +139,7 @@ class _HomeViewState extends State<HomeView> {
       _selectedRide = ride;
     });
   }
+  
 
   @override
   void initState() {
@@ -402,23 +403,84 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  Future<void> _findDriver() async {
-    // Check if a ride is selected
-    if (_selectedRide.isEmpty) {
-      print('No ride selected. Please select a ride.');
-      return; // Exit the method if no ride is selected
-    }
-
-    // Print the current and destination locations along with the selected ride
-    print('Ride started from ${_currentLocation.toString()} to ${_destinationLocation.toString()} with $_selectedRide');
-
-    // Navigate to the WaitingForDriverScreen
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => WaitingForDriverScreen()),
-    );
-
-    // Implement driver search logic here
-    print('Finding driver for $_selectedRide');
+Future<void> _findDriver() async {
+  // Check if a ride is selected
+  if (_selectedRide.isEmpty) {
+    print('No ride selected. Please select a ride.');
+    return; // Exit the method if no ride is selected
   }
+
+  // Print the current and destination locations along with the selected ride
+  print('Ride started from ${_currentLocation.toString()} to ${_destinationLocation.toString()} with $_selectedRide');
+
+  // Prepare the ride request data
+final rideRequest = {
+  "user_id": "6", // Use correct user ID
+  "pickup_location": {
+    "latitude": _currentLocation.latitude,
+    "longitude": _currentLocation.longitude,
+  },
+  "dropoff_location": {
+    "latitude": _destinationLocation!.latitude,
+    "longitude": _destinationLocation!.longitude,
+  },
+  "preferred_vehicle_type": _selectedRide,
+};
+
+
+  try {
+    // Send the ride request to the server
+// Send the ride request to the server
+final response = await http.post(
+  Uri.parse('http://localhost:3000/api/ride-requests'), // Use HTTP instead of HTTPS
+  headers: {'Content-Type': 'application/json'},
+  body: json.encode(rideRequest),
+);
+
+
+// Check if the response status is 200 or 201
+if (response.statusCode == 200 || response.statusCode == 201) {
+  print('Ride request sent successfully!');
+  
+  // Navigate to the WaitingForDriverScreen once the ride request is sent
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => WaitingForDriverScreen()),
+  );
+  
+  // Call the function to search for a driver
+  _searchForDriver();
+} else {
+  print('Failed to send ride request: ${response.statusCode}');
+  print('Response body: ${response.body}');
+}
+
+  } catch (e) {
+    print('Error sending ride request: $e');
+  }
+}
+
+Future<void> _searchForDriver() async {
+  // Simulate a delay while searching for the driver (replace this with actual driver search logic)
+  await Future.delayed(Duration(seconds: 3)); // Simulating a 3-second delay
+
+  // Simulate a response from the server (replace this with actual logic)
+  bool driverFound = await _simulateDriverSearch();
+
+  if (driverFound) {
+    // Notify the user that a driver was found (replace with actual driver data if needed)
+    print('Driver found!');
+    // Optionally, navigate to the next screen with driver details
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => DriverDetailsScreen(driverDetails)));
+  } else {
+    // Handle case where no driver was found
+    print('No drivers available at the moment.');
+  }
+}
+
+Future<bool> _simulateDriverSearch() async {
+  // Simulate a driver search logic (return true if driver found, false if not)
+  await Future.delayed(Duration(seconds: 1)); // Simulating network request
+  return true; // Simulate that a driver was found
+}
 }

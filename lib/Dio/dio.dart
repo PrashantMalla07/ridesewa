@@ -74,4 +74,29 @@ Future<void> changePassword() async {
       print('General error: $e');
     }
   }
+  
+}
+
+Future<void> loginDriver(String identifier, String password) async {
+  try {
+    final response = await dio.post(
+      'http://localhost:3000/api/driver-login', // Use 10.0.2.2 for Android emulator
+      data: {
+        'email': identifier, // Or 'phoneNumber': identifier depending on the input
+        'password': password,
+      },
+    );
+
+    print('Response data: ${response.data}');
+  } catch (e) {
+    if (e is DioError) {
+      print('Dio error occurred: ${e.message}');
+      if (e.response != null) {
+        print('Status code: ${e.response?.statusCode}');
+        print('Response data: ${e.response?.data}');
+      }
+    } else {
+      print('General error: $e');
+    }
+  }
 }

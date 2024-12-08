@@ -1,17 +1,13 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
-import 'package:ridesewa/controller/LoginController.dart';
+import 'package:ridesewa/controller/driver_login_controller.dart';
 
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
-
+class DriverLogin extends StatefulWidget {
   @override
-  _LoginViewState createState() => _LoginViewState();
+  _DriverLoginState createState() => _DriverLoginState();
 }
 
-class _LoginViewState extends State<LoginView> {
-  final LoginController controller = LoginController();
+class _DriverLoginState extends State<DriverLogin> {
+  final DriverLoginController controller = DriverLoginController();
 
   // Password visibility state for password
   bool _isPasswordVisible = false;
@@ -23,7 +19,7 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        
+       
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -51,7 +47,7 @@ class _LoginViewState extends State<LoginView> {
                     color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   'Login to your account',
                   style: TextStyle(
@@ -59,7 +55,7 @@ class _LoginViewState extends State<LoginView> {
                     color: Colors.grey,
                   ),
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: 40),
                 // Username or Phone Numbers
                 _buildTextField(
                   'Username',
@@ -67,7 +63,7 @@ class _LoginViewState extends State<LoginView> {
                   (value) => controller.identifier = value!,
                   controller.validateIdentifier,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 // Password Field
                 _buildPasswordField(
                   'Password',
@@ -77,16 +73,16 @@ class _LoginViewState extends State<LoginView> {
                   _isPasswordVisible,
                   () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
                 // Login Button
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
-                      controller.submitForm(context);
+                      controller.driverSubmitForm(context);
                     },
-                    child: const Text('Login'),
+                    child: Text('Login'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF001A72),
+                      backgroundColor: Color(0xFF001A72),
                       padding: EdgeInsets.symmetric(
                           horizontal: screenWidth * 0.25, vertical: 15),
                       shape: RoundedRectangleBorder(
@@ -95,25 +91,25 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 // Forgot Password
                 TextButton(
                   onPressed: () {
                     // Handle forgot password
                   },
-                  child: const Text(
+                  child: Text(
                     'Forgot your password?',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 // Sign up link
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, '/signup'); // Navigate to sign up screen
+                    Navigator.pushNamed(context, '/driverSignup'); // Navigate to sign up screen
                   },
                   child: RichText(
-                    text: const TextSpan(
+                    text: TextSpan(
                       text: "Don't have an account? ",
                       style: TextStyle(color: Colors.grey),
                       children: [
@@ -144,14 +140,14 @@ class _LoginViewState extends State<LoginView> {
         decoration: InputDecoration(
           prefixIcon: Icon(icon),
           hintText: hintText,
-          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: Colors.grey),
+            borderSide: BorderSide(color: Colors.grey),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: Colors.blue),
+            borderSide: BorderSide(color: Colors.blue),
           ),
         ),
         onSaved: onSaved,
@@ -184,14 +180,14 @@ class _LoginViewState extends State<LoginView> {
             onPressed: toggleVisibility,
           ),
           hintText: hintText,
-          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: Colors.grey),
+            borderSide: BorderSide(color: Colors.grey),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: Colors.blue),
+            borderSide: BorderSide(color: Colors.blue),
           ),
         ),
         onSaved: onSaved,
