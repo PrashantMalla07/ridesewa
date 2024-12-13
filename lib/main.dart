@@ -6,6 +6,7 @@ import 'package:ridesewa/Driver/waiting_adminreq.dart'; // Ensure correct import
 import 'package:ridesewa/const/driver_resources.dart';
 import 'package:ridesewa/const/help_support.dart';
 import 'package:ridesewa/const/privacy_policy.dart';
+import 'package:ridesewa/const/trip_history.dart';
 import 'package:ridesewa/provider/driverprovider.dart';
 import 'package:ridesewa/provider/userprovider.dart';
 import 'package:ridesewa/provider/walt_through_provider.dart';
@@ -13,6 +14,7 @@ import 'package:ridesewa/view/changePassword/changepasswrod.dart';
 import 'package:ridesewa/view/home/HomeView.dart';
 import 'package:ridesewa/view/home/adminDashboard.dart';
 import 'package:ridesewa/view/profile/drawer.dart';
+import 'package:ridesewa/view/profile/help_support_passenger.dart';
 import 'package:ridesewa/view/profile/profile_view.dart';
 import 'package:ridesewa/view/reg/LogInView.dart';
 import 'package:ridesewa/view/reg/SignUpView.dart';
@@ -60,8 +62,10 @@ Widget build(BuildContext context) {
       '/driver-home': (context) => DriverHomeView(),
       '/waiting-for-approval': (context) => WaitingForadminapproval(),
       '/help-support': (context) => HelpSupportPage(),
+      '/help-support-passenger': (context) => HelpSupportPassengerPage(),
         '/privacy-policy': (context) => PrivacyPolicyPage(),
          '/resources': (context) => DriverResourcesPage(),
+         '/trip-history': (context) => RideHistoryDrawer(),
     },
   );
 }

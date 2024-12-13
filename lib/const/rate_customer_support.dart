@@ -10,6 +10,7 @@ class RateSupportExperiencePage extends StatefulWidget {
 
 class _RateSupportExperiencePageState extends State<RateSupportExperiencePage> {
   double _rating = 0;
+  // ignore: unused_field
   String _comments = '';
 
   // Function to handle form submission

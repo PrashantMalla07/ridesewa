@@ -45,28 +45,24 @@ class DriverLoginController {
           final responseBody = response.data as Map<String, dynamic>;
 
           if (responseBody.containsKey('driver')) {
-            final driver = Driver.fromJson(responseBody['driver']); // Adjust based on your Driver model
+            final driverData = responseBody['driver']; // Ensure the correct field name from backend
+            print('Parsed Driver Data: $driverData');
+            final driver = Driver.fromJson(driverData);
 
-            // Save the driver data
+            print('Parsed User:  ${driver.firstName}, ${driver.email}, ${driver.phoneNumber}, ${driver.uid},');
             Provider.of<DriverProvider>(context, listen: false).setDriver(driver);
 
-            // Store the token (if returned by backend) in FlutterSecureStorage
-            // await storage.write(key: 'auth_token', value: token);
-
-            // Navigate to the home screen or wherever you need
+            // Proceed to next screen
             Navigator.pushReplacementNamed(context, '/driver-home');
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Driver data not found in response')),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Driver data not found in response')));
           }
         } else {
           final responseBody = response.data as Map<String, dynamic>;
           final errorMessage = responseBody['message'] ?? 'Login failed';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
         }
+
       } catch (e) {
         if (e is DioError) {
           print('Dio error: ${e.message}');
@@ -78,7 +74,7 @@ class DriverLoginController {
           print('Unexpected error: $e');
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
+          SnackBar(content: Text('An error occurred: ${e.toString()}')),
         );
       }
     }

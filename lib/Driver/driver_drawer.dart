@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/const/trip_history.dart';
 import 'package:ridesewa/provider/driverprovider.dart';
 
 class DriverDrawer extends StatefulWidget {
@@ -15,6 +16,7 @@ class _DriverDrawerState extends State<DriverDrawer> {
     final driver = Provider.of<DriverProvider>(context).driver;
 
     // Function to fetch driver status
+    // ignore: unused_element
     HttpClient createHttpClient() {
       final client = HttpClient();
       client.badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Trust all certificates
@@ -26,30 +28,59 @@ class _DriverDrawerState extends State<DriverDrawer> {
       child: Column(
         children: <Widget>[
           UserAccountsDrawerHeader(
-  accountName: Text(
-    driver?.name ?? 'Unknown Driver',
-    style: TextStyle(color: Colors.black),
-  ),
-  accountEmail: Text(
-    driver?.email ?? 'No email',
-    style: TextStyle(color: Colors.black, fontSize: 15.0),
-  ),
-  currentAccountPicture: CircleAvatar(
-    backgroundColor: Colors.white,
-    backgroundImage: driver?.photoUrl.isNotEmpty ?? false
-        ? NetworkImage(driver!.photoUrl) 
-        : null,  // Use the photoUrl if available
-    child: driver?.photoUrl.isEmpty ?? true
-        ? Text(
-            driver?.name.isNotEmpty ?? false ? driver!.name[0] : '',
-            style: TextStyle(fontSize: 40.0, color: Colors.black),
-          )
-        : null, // Show the first letter if no photoUrl is available
-  ),
-  decoration: BoxDecoration(
-    color: Colors.blue,
-  ),
-),
+            accountName: Row(
+              children: [
+                Text(
+                  driver?.firstName ?? 'Unknown Driver',
+                  style: TextStyle(color: Colors.black),
+                ),
+                SizedBox(width: 8.0),
+                Text(
+                  driver?.lastName ?? 'Unknown Driver',
+                  style: TextStyle(color: Colors.black),
+                ),
+                SizedBox(width: 100.0),  // Add some space between name and UID
+                Text(
+                  'UID: ${driver?.uid ?? 'No UID'}',  // Display UID beside the name
+                  style: TextStyle(color: Colors.black, fontSize: 14.0),
+                ),
+              ],
+            ),
+            accountEmail: Row(
+              children: [
+                Text(
+                  driver?.email ?? 'No email',
+                  style: TextStyle(color: Colors.black, fontSize: 15.0),
+                ),
+                 SizedBox(width: 40.0),  // Add some space between name and UID
+                Text(
+                  '${driver?.phoneNumber ?? 'No phone number'}',  // Display UID beside the name
+                  style: TextStyle(color: Colors.black, fontSize: 14.0),
+                ),
+              ],
+            ),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              backgroundImage: driver?.photoUrl?.isNotEmpty ?? false
+                  ? NetworkImage(driver!.photoUrl)
+                  : null,
+              child: driver?.photoUrl?.isEmpty ?? true
+                  ? Text(
+                      driver?.firstName?.isNotEmpty ?? false ? driver!.firstName[0] : '',
+                      style: TextStyle(fontSize: 40.0, color: Colors.black),
+                    )
+                  : null,
+            ),
+            otherAccountsPictures: [
+              // Optional other accounts pictures (not needed for UID)
+            ],
+            decoration: BoxDecoration(
+              color: Colors.blue,
+            ),
+          ),
+
+
+
    const Divider(),
 
             // Navigation Items
@@ -73,9 +104,11 @@ class _DriverDrawerState extends State<DriverDrawer> {
               leading: const Icon(Icons.history),
               title: const Text("Trip History"),
               onTap: () {
-                Navigator.pop(context);
-                // Navigate to Trip History Page
-              },
+              Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => RideHistoryDrawer()),
+          );
+            },
             ),
             ListTile(
               leading: const Icon(Icons.file_copy),
@@ -127,8 +160,7 @@ class _DriverDrawerState extends State<DriverDrawer> {
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
               onTap: () {
-                Navigator.pop(context);
-                // Perform Logout Action
+                 _logout(context);
               },
             ),
           
@@ -136,4 +168,21 @@ class _DriverDrawerState extends State<DriverDrawer> {
       ),
     );
   }
+}
+void _logout(BuildContext context) {
+  // Clear any session or token data here
+  // For example, if you're using shared preferences or a similar package to store user data:
+  
+  // Example: Clear session or token
+  // SharedPreferences.getInstance().then((prefs) {
+  //   prefs.clear();  // Clear all stored data
+  // });
+
+  // Or if you're using a package like `flutter_secure_storage` to store tokens securely, clear it:
+  // final storage = FlutterSecureStorage();
+  // storage.delete(key: "user_token");
+
+  // Now, navigate to the login page
+  Navigator.pop(context);  // Close the drawer
+  Navigator.pushReplacementNamed(context, '/driver-login');  // Replace the current screen with Login page
 }

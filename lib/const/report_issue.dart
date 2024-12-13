@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 
 class ReportIssuePage extends StatefulWidget {
+  const ReportIssuePage({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _ReportIssuePageState createState() => _ReportIssuePageState();
 }
 
 class _ReportIssuePageState extends State<ReportIssuePage> {
   final _formKey = GlobalKey<FormState>();
   String _issueCategory = 'App Bug';
+  // ignore: unused_field
   String _issueDescription = '';
+  // ignore: unused_field
   String _additionalDetails = '';
 
   // Function to handle form submission
   void _submitIssue() {
     if (_formKey.currentState?.validate() ?? false) {
       // Logic for submitting the issue (e.g., sending it to a backend or email)
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Issue reported successfully!')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Issue reported successfully!')));
       
       // Clear the form after submission
       _formKey.currentState?.reset();
@@ -26,7 +31,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Report an Issue'),
+        title: const Text('Report an Issue'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -49,7 +54,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
                     child: Text(value),
                   );
                 }).toList(),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Issue Category',
                   border: OutlineInputBorder(),
                 ),
@@ -58,7 +63,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               
               // Issue Description Text Field
               TextFormField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Describe the Issue',
                   border: OutlineInputBorder(),
                 ),
@@ -79,7 +84,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               
               // Additional Details Text Field
               TextFormField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Additional Details (Optional)',
                   border: OutlineInputBorder(),
                 ),
@@ -95,7 +100,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               // Submit Button
               ElevatedButton(
                 onPressed: _submitIssue,
-                child: Text('Submit Issue'),
+                child: const Text('Submit Issue'),
               ),
             ],
           ),

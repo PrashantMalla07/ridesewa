@@ -27,6 +27,7 @@ class _HomeViewState extends State<HomeView> {
   bool _rideStarted = false; // Track if the ride has started
   bool _isSearchBarVisible = true; // Flag to manage search bar visibility
   bool _isStartRideVisible = true; // Flag to manage start ride button visibility
+  final double _radiusInMeters = 100;
   
   Future<void> _getCurrentLocation() async {
     try {
@@ -140,7 +141,53 @@ class _HomeViewState extends State<HomeView> {
     });
   }
   
+ void _onMapTap(LatLng tappedLocation) {
+  if (_destinationLocation != null) {
+    // Check if the tap is on the current destination
+    final distanceToDestination = Geolocator.distanceBetween(
+      tappedLocation.latitude,
+      tappedLocation.longitude,
+      _destinationLocation!.latitude,
+      _destinationLocation!.longitude,
+    );
 
+    if (distanceToDestination < 10) { // 10 meters threshold for tapping accuracy
+      // Undo the destination
+      setState(() {
+        _destinationLocation = null;
+      });
+      print("Destination removed.");
+      return; // Exit early
+    }
+  }
+
+  // Calculate the distance between the tapped location and the current location
+  final distanceToCurrent = Geolocator.distanceBetween(
+    _currentLocation.latitude,
+    _currentLocation.longitude,
+    tappedLocation.latitude,
+    tappedLocation.longitude,
+  );
+
+  if (_destinationLocation == null) {
+    // Set the destination location
+    setState(() {
+      _destinationLocation = tappedLocation;
+      _mapController.move(tappedLocation, _currentZoom);
+    });
+    print("Destination set.");
+  } else if (distanceToCurrent <= 100) {
+    // Set the current location if within 100 meters
+    setState(() {
+      _currentLocation = tappedLocation;
+      _mapController.move(tappedLocation, _currentZoom);
+    });
+    print("Pickup point set.");
+  } else {
+    // Optionally, provide feedback if tap is too far
+    print("Tap is too far from the current location to be the pickup point.");
+  }
+}
   @override
   void initState() {
     super.initState();
@@ -167,6 +214,7 @@ class _HomeViewState extends State<HomeView> {
         title: Text('Home', style: TextStyle(color: Colors.black)),
       ),
       drawer: AppDrawer(),
+      
       body: Stack(
         children: [
           FlutterMap(
@@ -174,12 +222,26 @@ class _HomeViewState extends State<HomeView> {
             options: MapOptions(
               initialCenter: _currentLocation,
               initialZoom: _currentZoom,
+              onTap: (tapPosition, point) {
+                _onMapTap(point);  // Call _onMapTap when the user taps on the map
+              },
             ),
             children: [
               TileLayer(
                 urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 userAgentPackageName: 'com.example.app',
               ),
+              CircleLayer(
+            circles: [
+              CircleMarker(
+                point: _currentLocation,
+                color: Colors.blue.withOpacity(0.1),
+                borderStrokeWidth: 2,
+                borderColor: Colors.blue,
+                radius: _radiusInMeters,  // 100 meter radius
+              ),
+            ],
+          ),
               MarkerLayer(
                 markers: [
                   Marker(
@@ -206,12 +268,21 @@ class _HomeViewState extends State<HomeView> {
                 ],
               ),
             ],
-          ),
+          ),Positioned(
+      top: 20.0,
+      right: 20.0,
+      child: FloatingActionButton(
+        onPressed: _getCurrentLocation,
+        backgroundColor: Colors.white,
+        child: Icon(Icons.my_location, color: Colors.black),
+      ),
+    ),
           if (_isSearchBarVisible)
             Positioned(
               bottom: 20.0,
               left: 0,
               right: 0,
+              
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.05),
                 child: Container(
@@ -389,6 +460,7 @@ class _HomeViewState extends State<HomeView> {
             ),
         ],
       ),
+     
     );
   }
 

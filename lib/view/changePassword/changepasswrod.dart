@@ -22,75 +22,94 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   Future<void> _changePassword() async {
-    if (_formKey.currentState!.validate()) {
-      final newPassword = _newPasswordController.text.trim();
-      final confirmPassword = _confirmPasswordController.text.trim();
+  if (_formKey.currentState!.validate()) {
+    final newPassword = _newPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
 
-      // Debugging password values
-      print('New Password: "$newPassword"');
-      print('Confirm Password: "$confirmPassword"');
+    // Debugging password values
+    print('New Password: "$newPassword"');
+    print('Confirm Password: "$confirmPassword"');
 
-      if (newPassword == confirmPassword) {
-        print('Passwords match!');
-      } else {
-        print('Passwords do NOT match!');
-      }
+    if (newPassword == confirmPassword) {
+      print('Passwords match!');
+    } else {
+      print('Passwords do NOT match!');
+    }
 
-      // Check if new password and confirm password match
-      if (newPassword != confirmPassword) {
+    // Check if new password and confirm password match
+    if (newPassword != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('New password and confirmation do not match')),
+      );
+      return;
+    }
+
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      print('Token: $token');  // Add this line to log the token
+
+      if (token == null || token.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('New password and confirmation do not match')),
+          SnackBar(content: Text('Token not found')),
         );
         return;
       }
 
-      try {
-        final token = await _secureStorage.read(key: 'auth_token');
+      // Log the request data being sent
+      print('Request data: ${{
+        'currentPassword': _currentPasswordController.text.trim(),
+        'newPassword': newPassword,
+        'confirmPassword': confirmPassword,
+      }}');
 
-        final response = await _dio.post(
-          'http://localhost:3000/change-password',
-          data: {
-            'currentPassword': _currentPasswordController.text.trim(),
-            'newPassword': newPassword,
-            'confirmPassword': confirmPassword,
+      final response = await _dio.post(
+        'http://localhost:3000/change-password',
+        data: {
+          'currentPassword': _currentPasswordController.text.trim(),
+          'newPassword': newPassword,
+          'confirmPassword': confirmPassword,
+        },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
           },
-          options: Options(
-            headers: {
-              'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': token != null ? 'Bearer $token' : '',
-            },
-          ),
-        );
+        ),
+      );
 
-        if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Password changed successfully')),
-          );
-          _clearFormFields();
-          Navigator.pop(context);
-        } else {
-          final errorMessage = response.data['error'] ?? 'Failed to change password';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
-          );
-        }
-      } on DioError catch (dioError) {
-        String errorMessage = 'An error occurred';
-        if (dioError.response != null) {
-          errorMessage = dioError.response!.data['error'] ?? 'Server error occurred';
-        } else {
-          errorMessage = 'Network error: ${dioError.message}';
-        }
+      // Log the full response
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Password changed successfully')),
+        );
+        _clearFormFields();
+        Navigator.pop(context);
+      } else {
+        final errorMessage = response.data['error'] ?? 'Failed to change password';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unknown error occurred: $e')),
-        );
       }
+    } on DioError catch (dioError) {
+      String errorMessage = 'An error occurred';
+      if (dioError.response != null) {
+        errorMessage = dioError.response!.data['error'] ?? 'Server error occurred';
+      } else {
+        errorMessage = 'Network error: ${dioError.message}';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unknown error occurred: $e')),
+      );
     }
   }
+}
 
   void _clearFormFields() {
     _currentPasswordController.clear();

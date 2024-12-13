@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 import 'package:ridesewa/Driver/accept_ride.dart';
+import 'package:ridesewa/provider/driverprovider.dart';
+
 
 class RideRequestsPage extends StatefulWidget {
   @override
@@ -35,6 +38,7 @@ class _RideRequestsPageState extends State<RideRequestsPage> {
         setState(() {
           rideRequests = data.map((request) {
             return {
+              'id': request['id'],
               'user': 'User ${request['user_id']}',
               'pickup': LatLng(
                 request['pickup_location']['latitude'],
@@ -68,6 +72,65 @@ class _RideRequestsPageState extends State<RideRequestsPage> {
       });
     }
   }
+
+  Future<void> _acceptRide(int rideId, LatLng pickupLocation, LatLng dropoffLocation) async {
+  final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+  final driverUid = driverProvider.driver?.uid; // Use 'uid' instead of 'id'
+  
+  if (driverUid != null) {
+    final url = 'http://localhost:3000/api/ride-requests/accept/$rideId';
+
+    try {
+      final response = await http.post(
+  Uri.parse(url),
+  headers: {'Content-Type': 'application/json'},
+  body: jsonEncode({
+    'rideId': rideId.toString(),
+    'driver_uid': driverUid, // Ensure this is the correct field
+    'pickup_location': jsonEncode({
+      'latitude': pickupLocation.latitude,
+      'longitude': pickupLocation.longitude,
+    }),
+    'dropoff_location': jsonEncode({
+      'latitude': dropoffLocation.latitude,
+      'longitude': dropoffLocation.longitude,
+    }),
+  }),
+);
+
+
+      if (response.statusCode == 200) {
+        setState(() {
+          rideRequests.removeWhere((request) => request['id'] == rideId);
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RideAcceptedPage(
+              driverLocation: _driverLocation!,
+              userLocation: pickupLocation,
+              destination: dropoffLocation,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to accept ride: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Driver UID is not available.')),
+    );
+  }
+}
+
 
   Future<void> _getCurrentLocation() async {
     setState(() {
@@ -128,9 +191,9 @@ class _RideRequestsPageState extends State<RideRequestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      appBar: AppBar(//automaticallyImplyLeading: false,
-      title: Text('Ride Requests')),
+      appBar: AppBar(
+        title: Text('Ride Requests'),
+      ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _hasError
@@ -157,16 +220,17 @@ class _RideRequestsPageState extends State<RideRequestsPage> {
                                 ElevatedButton(
                                   onPressed: _driverLocation != null
                                       ? () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => RideAcceptedPage(
-                                                driverLocation: _driverLocation!,
-                                                userLocation: request['pickup'],
-                                                destination: request['dropoff'],
-                                              ),
-                                            ),
-                                          );
+                                          final int? rideId = request['id'];
+                                          final LatLng? pickupLocation = request['pickup'];
+                                          final LatLng? dropoffLocation = request['dropoff'];
+
+                                          if (rideId != null && pickupLocation != null && dropoffLocation != null) {
+                                            _acceptRide(rideId, pickupLocation, dropoffLocation);
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Invalid ride request data.')),
+                                            );
+                                          }
                                         }
                                       : null,
                                   child: Text('Accept'),

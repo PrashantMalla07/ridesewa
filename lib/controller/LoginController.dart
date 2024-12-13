@@ -45,6 +45,8 @@ class LoginController {
 
           if (responseBody.containsKey('user') && responseBody.containsKey('token')) {
             final user = User.fromJson(responseBody['user']);
+print('Parsed User:  ${user.firstName}, ${user.email},${user.phoneNumber},${user.isAdmin},${user.uid},');
+
             final token = responseBody['token'];
 
             // Save the user data and token

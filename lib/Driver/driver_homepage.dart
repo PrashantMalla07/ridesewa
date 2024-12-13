@@ -38,6 +38,7 @@ class _DriverHomeViewState extends State<DriverHomeView> {
     }
   }
    // Define the logout function
+  // ignore: unused_element
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('authToken'); // Remove the authentication token or any other saved data
