@@ -11,7 +11,7 @@ class UserProvider with ChangeNotifier {
 
   void setUser(User user) {
     _user = user;
-    print('User set: ${_user?.uid}');
+    print('User set: ${_user?.id}');
     notifyListeners();
   }
 

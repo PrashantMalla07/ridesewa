@@ -1,11 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/io_client.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:ridesewa/provider/userprovider.dart';
 import 'package:ridesewa/view/profile/profile_view.dart';
+import 'package:ridesewa/view/profile/user_review.dart';
 import 'package:ridesewa/view/profile/user_ride_history.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -14,73 +15,112 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
+  final Dio _dio = Dio();
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
+
+  double? _averageRating;
+  bool _isLoading = true;
+  String _errorMessage = '';
+  Map<String, dynamic>? _userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAverageUserRating();
+    _fetchUserProfile();
+  }
+
+  // Custom HTTP client to bypass SSL errors
+  HttpClient createHttpClient() {
+    final client = HttpClient();
+    client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+    client.connectionTimeout = const Duration(seconds: 30);
+    return client;
+  }
+
+  // Fetch the average user rating
+  Future<void> _fetchAverageUserRating() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final String? userId = userProvider.user?.id?.toString();
+    if (userId == null) {
+      setState(() {
+        _errorMessage = 'User ID is not available.';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.get(
+        'http://localhost:3000/api/user_ratings/user/$userId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      if (response.statusCode == 200) {
+        final dynamic averageRating = response.data['average_rating'];
+        if (averageRating is num || (averageRating is String && double.tryParse(averageRating) != null)) {
+          setState(() {
+            _averageRating = double.parse(averageRating.toString());
+            _isLoading = false;
+          });
+        } else {
+          throw Exception('Invalid average rating value');
+        }
+      } else {
+        throw Exception('Failed to load average rating with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load average rating. Please try again later. Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+  Future<void> _fetchUserProfile() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final String? userId = userProvider.user?.id?.toString();
+    if (userId == null) {
+      setState(() {
+        _errorMessage = 'User ID is not available.';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.get(
+        'http://localhost:3000/user/profile/$userId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      setState(() {
+        _userData = response.data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load profile. Please try again later.';
+        _isLoading = false;
+      });
+    }
+  }
+Widget _buildPlaceholderProfile() {
+  return CircleAvatar(
+    backgroundColor: Colors.grey, // Placeholder color
+    child: Icon(Icons.person, size: 40.0, color: Colors.white),
+  );
+}
+  // Handle logout action
+  void _logout(BuildContext context) {
+    // Clear any session or token data
+    _storage.delete(key: 'auth_token'); // Clear auth token
+    Navigator.pop(context); // Close the drawer
+    Navigator.pushReplacementNamed(context, '/login'); // Navigate to login
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProvider>(context).user;
-
-    // Function to fetch user status
-HttpClient createHttpClient() {
-  final client = HttpClient();
-  client.badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Trust all certificates
-  client.connectionTimeout = const Duration(seconds: 30); // Increase the timeout
-  return client;
-}
-Future<void> checkUserStatus(BuildContext context) async {
-  try {
-    final ioClient = http.IOClient(createHttpClient());
-
-    final response = await ioClient.post(
-      Uri.parse('https://localhost:3000/api/user-status'),
-      headers: {
-        'Authorization': 'Bearer ${user?.token}', // Assuming you have a token for the authenticated user
-     
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-
-      if (data.containsKey('isDriver') && data['isDriver'] != null) {
-        final isDriver = data['isDriver'] == 1;
-        final driverStatus = data['driverStatus'];
-        final verificationDataFilled = data['verificationDataFilled'] == 1;
-
-        if (isDriver && verificationDataFilled) {
-          Navigator.pushReplacementNamed(context, '/driver-home');
-        } else if (!isDriver && driverStatus == 'pending' && verificationDataFilled) {
-          Navigator.pushReplacementNamed(context, '/waiting-for-approval');
-        } else if (!isDriver && driverStatus == 'pending' && !verificationDataFilled) {
-          Navigator.pushReplacementNamed(context, '/driver-verification');
-        } else {
-          print("Unexpected user status: isDriver: $isDriver, driverStatus: $driverStatus, verificationDataFilled: $verificationDataFilled");
-        }
-      } else {
-        print("Response doesn't contain the 'isDriver' field.");
-      }
-    } else {
-      print("Error: ${response.statusCode}");
-    }
-  } catch (error) {
-    print('Error fetching user status: $error');
-  }
-}
-void _logout(BuildContext context) {
-  // Clear any session or token data here
-  // For example, if you're using shared preferences or a similar package to store user data:
-  
-  // Example: Clear session or token
-  // SharedPreferences.getInstance().then((prefs) {
-  //   prefs.clear();  // Clear all stored data
-  // });
-
-  // Or if you're using a package like `flutter_secure_storage` to store tokens securely, clear it:
-  // final storage = FlutterSecureStorage();
-  // storage.delete(key: "user_token");
-
-  // Now, navigate to the login page
-  Navigator.pop(context);  // Close the drawer
-  Navigator.pushReplacementNamed(context, '/login');  // Replace the current screen with Login page
-}
 
     return Drawer(
       child: Column(
@@ -94,106 +134,128 @@ void _logout(BuildContext context) {
               user?.email ?? '',
               style: TextStyle(color: Colors.black, fontSize: 15.0),
             ),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Text(
-                user?.firstName.isNotEmpty ?? false ? user!.firstName[0] : '',
-                style: TextStyle(fontSize: 40.0, color: Colors.black),
-              ),
-            ),
+                       currentAccountPicture: ClipOval(
+  child: _userData != null && _userData!['image_url'] != null &&
+          _userData!['image_url'].isNotEmpty
+      ? Image.network(
+          _userData!['image_url'],
+          height: 150.0,
+          width: 150.0,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            } else {
+              return Center(child: CircularProgressIndicator());
+            }
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return _buildPlaceholderProfile();
+          },
+        )
+      : _buildPlaceholderProfile(),
+),
             decoration: BoxDecoration(
               color: Colors.blue,
             ),
           ),
+          ListTile(
+            title: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : _errorMessage.isNotEmpty
+                    ? Center(child: Text(_errorMessage))
+                    : _averageRating != null
+                        ? Row(
+                            children: [
+                              Icon(
+                                Icons.star,
+                                color: Colors.yellow,
+                                size: 30,
+                              ),
+                              SizedBox(width: 8),
+                              Text('$_averageRating'),
+                            ],
+                          )
+                        : Center(child: Text('No rating data available')),
+          ),
           const Divider(),
-
-                  ListTile(
-          leading: const Icon(Icons.dashboard),
-          title: const Text("Dashboard"),
-          onTap: () {
-            Navigator.pop(context); // Close the drawer
-            Navigator.pushReplacementNamed(context, '/home'); 
-          },
-        ),
-       
-        ListTile(
-          leading: const Icon(Icons.history),
-          title: const Text("Trip History"),
-           onTap: () {
-    Navigator.pop(context);
-
-    // Access currentUser from the UserProvider
-    final currentUser = Provider.of<UserProvider>(context, listen: false).user;
-
-    if (currentUser != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RideHistoryScreen(userId: 1),  // Pass userId here
-        ),
-      );
-    } else {
-      // Handle the case where the user is null
-      print("User not found.");
-    }
-  },
-        ),
-        ListTile(
-          leading: const Icon(Icons.account_circle),
-          title: const Text("Profile"),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProfileView()),
-            );
-          },
+          ListTile(
+            leading: const Icon(Icons.dashboard),
+            title: const Text("Dashboard"),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer
+              Navigator.pushReplacementNamed(context, '/home');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text("Trip History"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserRideHistory(),  // Navigate to ride history page
                 ),
-        ListTile(
-          leading: const Icon(Icons.notifications),
-          title: const Text("Reviews"),
-          onTap: () {
-            Navigator.pop(context);
-            // Navigate to Notifications Page
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.settings),
-          title: const Text("Settings"),
-          onTap: () {
-            Navigator.pop(context);
-            // Navigate to Settings Page
-          },
-        ),
-        Spacer(),
-        const Divider(),
-
-        // Support and Legal
-        ListTile(
-          leading: const Icon(Icons.support_agent),
-          title: const Text("Help & Support"),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.pushNamed(context, '/help-support-passenger');
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.policy),
-          title: const Text("Privacy Policy"),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.pushNamed(context, '/privacy-policy');
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.logout),
-          title: const Text("Logout"),
-          onTap: () {
-          // Perform Logout Action
-          _logout(context);  // Call logout method
-        },
-        ),
-
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_circle),
+            title: const Text("Profile"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserProfilePage(),  // Navigate to profile page
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.star),
+            title: const Text("Reviews"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserReviewPage(),  // Navigate to reviews page
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text("Settings"),
+            onTap: () {
+              Navigator.pop(context);  // Close the drawer
+              // Navigate to Settings Page (Add navigation logic here)
+            },
+          ),
+          Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.support_agent),
+            title: const Text("Help & Support"),
+            onTap: () {
+              Navigator.pop(context);  // Close the drawer
+              Navigator.pushNamed(context, '/help-support-passenger');  // Navigate to support page
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.policy),
+            title: const Text("Privacy Policy"),
+            onTap: () {
+              Navigator.pop(context);  // Close the drawer
+              Navigator.pushNamed(context, '/privacy-policy');  // Navigate to privacy policy page
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text("Logout"),
+            onTap: () {
+              _logout(context);  // Perform logout action
+            },
+          ),
         ],
       ),
     );

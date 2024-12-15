@@ -47,7 +47,7 @@ factory User.fromJson(Map<String, dynamic> json) {
   print('Parsing User: $json');  // Log the entire JSON response
   print('ID: ${json['id']}');  // Debug the ID value directly
   return User(
-    id: json['userid'] ?? 0,
+    id: json['id'] ?? 0,
     firstName: json['firstName'] ?? '',
     lastName: json['lastName'] ?? '',
     email: json['email'] ?? '',

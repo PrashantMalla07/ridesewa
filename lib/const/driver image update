@@ -1,0 +1,34 @@
+
+  Future<void> _uploadDriverPhoto() async {
+    final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+    final String? driveruid = driverProvider.driver?.uid?.toString();
+    if (driveruid == null) return;
+
+    final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
+    if (photo == null) return;
+
+    try {
+      final formData = FormData.fromMap({
+        'driver_photo': await MultipartFile.fromFile(photo.path),
+      });
+
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        'http://localhost:3000/driver/photo/$driveruid',
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        _fetchDriverProfile(); // Refresh the driver profile
+      } else {
+        setState(() {
+          _errorMessage = 'Unexpected error while updating photo.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to upload photo. Please try again.';
+      });
+    }
+  }

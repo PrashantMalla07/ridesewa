@@ -3,52 +3,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:ridesewa/provider/userprovider.dart';
+import 'package:ridesewa/provider/driverprovider.dart';
 
-class UserProfilePage extends StatefulWidget {
+class DriverProfilePage extends StatefulWidget {
   @override
-  _UserProfilePageState createState() => _UserProfilePageState();
+  _DriverProfilePageState createState() => _DriverProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> {
+class _DriverProfilePageState extends State<DriverProfilePage> {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = FlutterSecureStorage();
-  Map<String, dynamic>? _userData; // Holds user data when fetched
-  String? _errorMessage; // Holds error message if fetching fails
-  bool _isLoading = true; // Flag to track loading state
   final ImagePicker _picker = ImagePicker();
+
+  Map<String, dynamic>? _driverData;
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchUserProfile(); // Fetch user profile when the widget is initialized
+    _fetchDriverProfile();
   }
 
-  Future<void> _fetchUserProfile() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false); // Access user provider
-    final String? userId = userProvider.user?.id?.toString(); // Get user ID
-    if (userId == null) {
-      // If user ID is null, show error
+  Future<void> _fetchDriverProfile() async {
+    final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+    final String? driveruid = driverProvider.driver?.uid?.toString();
+    if (driveruid == null) {
       setState(() {
-        _errorMessage = 'User ID is not available.';
+        _errorMessage = 'Driver UID is not available.';
         _isLoading = false;
       });
       return;
     }
 
     try {
-      // Fetch user profile data from the backend
-      final token = await _storage.read(key: 'auth_token'); // Read token from secure storage
+      final token = await _storage.read(key: 'auth_token');
       final response = await _dio.get(
-        'http://localhost:3000/user/profile/$userId',
-        options: Options(headers: {'Authorization': 'Bearer $token'}), // Pass token in header
+        'http://localhost:3000/driver/profile/$driveruid',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() {
-        _userData = response.data; // Update user data
-        _isLoading = false; // Stop loading indicator
+        _driverData = response.data;
+        _isLoading = false;
       });
     } catch (e) {
-      // Handle errors
       setState(() {
         _errorMessage = 'Failed to load profile. Please try again later.';
         _isLoading = false;
@@ -59,32 +57,51 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      // Logic to handle the selected image (you can implement this)
+      // Logic to handle the selected image
     }
+  }
+
+  void _showImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Image.network(imageUrl, fit: BoxFit.cover),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Handle loading state, error messages, and display user data
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile Page'),
+        title: Text('Driver Profile'),
+        backgroundColor: Colors.blueAccent,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : (_errorMessage != null && _errorMessage!.isNotEmpty)
-              ? Center(child: Text(_errorMessage!))
-              : _userData != null
+          : _errorMessage.isNotEmpty
+              ? Center(child: Text(_errorMessage))
+              : _driverData != null
                   ? SingleChildScrollView(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                       child: Column(
                         children: [
                           Center(
-                            child: _userData!['image_url'] != null &&
-                                    _userData!['image_url'].isNotEmpty
+                            child: _driverData!['driver_photo'] != null &&
+                                    _driverData!['driver_photo'].isNotEmpty
                                 ? ClipOval(
                                     child: Image.network(
-                                      _userData!['image_url'],
+                                      _driverData!['driver_photo'],
                                       height: 150,
                                       width: 150,
                                       fit: BoxFit.cover,
@@ -93,10 +110,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 : _buildPlaceholderProfile(),
                           ),
                           SizedBox(height: 16),
-                          _buildProfileDetail('Name:', '${_userData!['first_name']} ${_userData!['last_name']}'),
-                          _buildProfileDetail('Email:', _userData!['email']),
-                          _buildProfileDetail('Phone:', _userData!['phone_number']),
-                          
+                          _buildProfileDetail('Name:', '${_driverData!['first_name']} ${_driverData!['last_name']}'),
+                          _buildProfileDetail('Email:', _driverData!['email']),
+                          _buildProfileDetail('Phone:', _driverData!['phone_number']),
+                          _buildProfileDetail('Vehicle Type:', _driverData!['vehicle_type'] ?? 'N/A'),
+                          _buildProfileDetail('Vehicle Color:', _driverData!['vehicle_color'] ?? 'N/A'),
+                          _buildProfileDetail('License Number:', _driverData!['license_number'] ?? 'N/A'),
+                          _buildProfileDetail('Citizenship Number:', _driverData!['citizenship_id'] ?? 'N/A'),
+                          SizedBox(height: 16),
+                          _buildImageSection('License Images', _driverData!['license_photo'], context),
+                          SizedBox(height: 16),
+                          _buildImageSection('Citizenship Images', _driverData!['citizenship_photo'], context),
                         ],
                       ),
                     )
@@ -161,6 +185,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildImageSection(String label, String? imageUrl, BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showImage(context, imageUrl ?? ''),
+      child: imageUrl != null && imageUrl.isNotEmpty
+          ? Text(
+              label,
+              style: TextStyle(
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
+            )
+          : Text('No $label'),
     );
   }
 }
