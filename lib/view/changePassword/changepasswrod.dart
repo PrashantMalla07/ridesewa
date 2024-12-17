@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ridesewa/BaseUrl.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   @override
@@ -63,7 +64,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       }}');
 
       final response = await _dio.post(
-        'http://localhost:3000/change-password',
+        '${BaseUrl.baseUrl}/change-password',
         data: {
           'currentPassword': _currentPasswordController.text.trim(),
           'newPassword': newPassword,

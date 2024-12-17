@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:ridesewa/BaseUrl.dart';
 
 class AdminDashboard extends StatefulWidget {
   @override
@@ -36,7 +37,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/admin-dashboard/pending-drivers'),
+        Uri.parse('${BaseUrl.baseUrl}/api/admin-dashboard/pending-drivers'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -78,7 +79,7 @@ Future<void> _verifyDriver(String driverId, bool isVerified) async {
 
   try {
     final response = await http.post(
-      Uri.parse('http://localhost:3000/api/admin/verify-driver'),
+      Uri.parse('${BaseUrl.baseUrl}/api/admin/verify-driver'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -112,12 +113,12 @@ Future<void> _verifyDriver(String driverId, bool isVerified) async {
 
   // Build images from URLs or fallback error icon
   Widget _buildImage(String imagePath) {
-    if (imagePath == null || imagePath.isEmpty) {
+    if (imagePath.isEmpty) {
       return Center(child: Icon(Icons.error, color: Colors.red, size: 40));
     }
 
     // Assuming imagePath might be a relative URL, you can prepend the base URL.
-    String baseUrl = 'http://localhost:3000/';
+    String baseUrl = '${BaseUrl.baseUrl}';
     String imageUrl = imagePath.startsWith('http') ? imagePath : baseUrl + imagePath;
 
     return Image.network(

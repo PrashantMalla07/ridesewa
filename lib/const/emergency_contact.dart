@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyContactPage extends StatelessWidget {
@@ -21,25 +20,6 @@ class EmergencyContactPage extends StatelessWidget {
   }
 
   // Function to send email
-  Future<void> _sendEmail(BuildContext context) async {
-    final Email email = Email(
-      body: 'I need emergency support.',
-      subject: 'Emergency Support Request',
-      recipients: [emergencyEmail],
-      isHTML: false,
-    );
-
-    try {
-      await FlutterEmailSender.send(email);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Email sent successfully!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send email')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +53,7 @@ class EmergencyContactPage extends StatelessWidget {
 
             // Email Button
             ElevatedButton.icon(
-              onPressed: () => _sendEmail(context),
+              onPressed: () => (context),
               icon: Icon(Icons.email),
               label: Text('Email Emergency Support'),
               style: ElevatedButton.styleFrom(

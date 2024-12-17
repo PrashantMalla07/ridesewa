@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/provider/driverprovider.dart';
 
 class DriverRatingPage extends StatefulWidget {
@@ -37,7 +38,7 @@ class _DriverRatingPageState extends State<DriverRatingPage> {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.get(
-        'http://localhost:3000/api/driver_ratings/driver/$driverUid',
+        '${BaseUrl.baseUrl}/api/driver_ratings/driver/$driverUid',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       if (response.statusCode == 200) {

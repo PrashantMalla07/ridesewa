@@ -5,6 +5,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
+import 'package:ridesewa/provider/userprovider.dart';
 import 'package:ridesewa/view/home/waiting_driver.dart';
 import 'package:ridesewa/view/profile/drawer.dart';
 
@@ -484,10 +487,16 @@ Future<void> _findDriver() async {
 
   // Print the current and destination locations along with the selected ride
   print('Ride started from ${_currentLocation.toString()} to ${_destinationLocation.toString()} with $_selectedRide');
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  final String? userid = userProvider.user?.id.toString();
 
+  if (userid == null) {
+    print('User ID not found.');
+    return;
+  }
   // Prepare the ride request data
 final rideRequest = {
-  "user_id": "6", // Use correct user ID
+  "user_id": userid, // Use correct user ID
   "pickup_location": {
     "latitude": _currentLocation.latitude,
     "longitude": _currentLocation.longitude,
@@ -504,7 +513,7 @@ final rideRequest = {
     // Send the ride request to the server
 // Send the ride request to the server
 final response = await http.post(
-  Uri.parse('http://localhost:3000/api/ride-requests'), // Use HTTP instead of HTTPS
+  Uri.parse('${BaseUrl.baseUrl}/api/ride-requests'), // Use HTTP instead of HTTPS
   headers: {'Content-Type': 'application/json'},
   body: json.encode(rideRequest),
 );

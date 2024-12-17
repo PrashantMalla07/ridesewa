@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/model/UserModel.dart';
 import 'package:ridesewa/provider/userprovider.dart';
 
@@ -25,7 +26,7 @@ class LoginController {
 
       try {
         final response = await dio.post(
-          'http://localhost:3000/login', 
+          '${BaseUrl.baseUrl}/login', 
           options: Options(
             headers: <String, String>{
               'Content-Type': 'application/json; charset=UTF-8',

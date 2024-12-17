@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/const/ride_detail_from_triphistory.dart';
 import 'package:ridesewa/provider/driverprovider.dart';
 
@@ -38,7 +39,7 @@ Future<void> _fetchRideHistory() async {
     return;
   }
 
-  final url = 'http://localhost:3000/api/rides/driver/$driverUid';
+  final url = '${BaseUrl.baseUrl}/api/rides/driver/$driverUid';
 
   try {
     print('Sending request to: $url'); // Log the URL being called

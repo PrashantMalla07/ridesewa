@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/provider/driverprovider.dart';
 
 class DriverReviewPage extends StatefulWidget {
@@ -24,7 +25,7 @@ class _DriverReviewPageState extends State<DriverReviewPage> {
       final driverProvider = Provider.of<DriverProvider>(context, listen: false);
       final String? driveruid = driverProvider.driver?.uid?.toString();
 
-      final response = await http.get(Uri.parse('http://localhost:3000/api/reviews/driver/$driveruid'));
+      final response = await http.get(Uri.parse('${BaseUrl.baseUrl}/api/reviews/driver/$driveruid'));
 
       if (response.statusCode == 200) {
         setState(() {

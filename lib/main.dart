@@ -13,6 +13,7 @@ import 'package:ridesewa/provider/walt_through_provider.dart';
 import 'package:ridesewa/view/changePassword/changepasswrod.dart';
 import 'package:ridesewa/view/home/HomeView.dart';
 import 'package:ridesewa/view/home/adminDashboard.dart';
+import 'package:ridesewa/view/introScreen/walkthrough.dart';
 import 'package:ridesewa/view/profile/drawer.dart';
 import 'package:ridesewa/view/profile/help_support_passenger.dart';
 import 'package:ridesewa/view/profile/profile_view.dart';
@@ -48,7 +49,8 @@ Widget build(BuildContext context) {
       primarySwatch: Colors.blue,
       visualDensity: VisualDensity.adaptivePlatformDensity,
     ),
-    home: LoginView(),
+    
+    home: WalkThrough(),
     routes: {
       '/login': (context) => const LoginView(),
       '/driver-login': (context) => DriverLogin(),

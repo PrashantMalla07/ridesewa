@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/model/DriverModel.dart'; // Adjust import for your DriverModel
 import 'package:ridesewa/provider/driverprovider.dart'; // Adjust to a provider for Driver data
 
@@ -25,7 +26,7 @@ class DriverLoginController {
 
       try {
         final response = await dio.post(
-          'http://localhost:3000/api/driver-login',
+          '${BaseUrl.baseUrl}/api/driver-login',
           options: Options(
             headers: <String, String>{
               'Content-Type': 'application/json; charset=UTF-8',

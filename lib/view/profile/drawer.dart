@@ -4,8 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/provider/userprovider.dart';
 import 'package:ridesewa/view/profile/profile_view.dart';
+import 'package:ridesewa/view/profile/settings.dart';
 import 'package:ridesewa/view/profile/user_review.dart';
 import 'package:ridesewa/view/profile/user_ride_history.dart';
 
@@ -41,7 +43,7 @@ class _AppDrawerState extends State<AppDrawer> {
   // Fetch the average user rating
   Future<void> _fetchAverageUserRating() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final String? userId = userProvider.user?.id?.toString();
+    final String? userId = userProvider.user?.id.toString();
     if (userId == null) {
       setState(() {
         _errorMessage = 'User ID is not available.';
@@ -53,7 +55,7 @@ class _AppDrawerState extends State<AppDrawer> {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.get(
-        'http://localhost:3000/api/user_ratings/user/$userId',
+        '${BaseUrl.baseUrl}/api/user_ratings/user/$userId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       if (response.statusCode == 200) {
@@ -78,7 +80,7 @@ class _AppDrawerState extends State<AppDrawer> {
   }
   Future<void> _fetchUserProfile() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final String? userId = userProvider.user?.id?.toString();
+    final String? userId = userProvider.user?.id.toString();
     if (userId == null) {
       setState(() {
         _errorMessage = 'User ID is not available.';
@@ -90,7 +92,7 @@ class _AppDrawerState extends State<AppDrawer> {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.get(
-        'http://localhost:3000/user/profile/$userId',
+        '${BaseUrl.baseUrl}/user/profile/$userId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() {
@@ -227,8 +229,11 @@ Widget _buildPlaceholderProfile() {
             leading: const Icon(Icons.settings),
             title: const Text("Settings"),
             onTap: () {
-              Navigator.pop(context);  // Close the drawer
-              // Navigate to Settings Page (Add navigation logic here)
+               Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsPage(),  // Navigate to reviews page
+                ),);
             },
           ),
           Spacer(),

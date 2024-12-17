@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/provider/userprovider.dart';
 
 class UserReviewPage extends StatefulWidget {
@@ -24,7 +25,7 @@ class _UserReviewPageState extends State<UserReviewPage> {
   Future<void> fetchReviews() async {
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final String? userid = userProvider.user?.id?.toString();
+      final String? userid = userProvider.user?.id.toString();
 
       if (userid == null) {
         setState(() {
@@ -34,7 +35,7 @@ class _UserReviewPageState extends State<UserReviewPage> {
         return;
       }
 
-      final response = await http.get(Uri.parse('http://localhost:3000/api/reviews/user/$userid'));
+      final response = await http.get(Uri.parse('${BaseUrl.baseUrl}/api/reviews/user/$userid'));
 
       if (response.statusCode == 200) {
         setState(() {

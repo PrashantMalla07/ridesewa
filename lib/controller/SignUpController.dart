@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/model/UserModel.dart';
 
 class SignUpController {
@@ -27,7 +28,7 @@ class SignUpController {
       try {
         // Send a POST request to the backend
         final response = await http.post(
-          Uri.parse('http://localhost:3000/register'), 
+          Uri.parse('${BaseUrl.baseUrl}/register'), 
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

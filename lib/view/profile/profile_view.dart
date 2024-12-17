@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/provider/userprovider.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -26,7 +27,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Future<void> _fetchUserProfile() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false); // Access user provider
-    final String? userId = userProvider.user?.id?.toString(); // Get user ID
+    final String? userId = userProvider.user?.id.toString(); // Get user ID
     if (userId == null) {
       // If user ID is null, show error
       setState(() {
@@ -40,7 +41,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       // Fetch user profile data from the backend
       final token = await _storage.read(key: 'auth_token'); // Read token from secure storage
       final response = await _dio.get(
-        'http://localhost:3000/user/profile/$userId',
+        '${BaseUrl.baseUrl}/user/profile/$userId',
         options: Options(headers: {'Authorization': 'Bearer $token'}), // Pass token in header
       );
       setState(() {

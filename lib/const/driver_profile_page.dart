@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/provider/driverprovider.dart';
 
 class DriverProfilePage extends StatefulWidget {
@@ -39,7 +40,7 @@ class _DriverProfilePageState extends State<DriverProfilePage> {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.get(
-        'http://localhost:3000/driver/profile/$driveruid',
+        '${BaseUrl.baseUrl}/driver/profile/$driveruid',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() {

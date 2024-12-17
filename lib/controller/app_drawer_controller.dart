@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ridesewa/BaseUrl.dart';
 
 class AppDrawerController extends ChangeNotifier {
   String username = '';
@@ -13,7 +14,7 @@ class AppDrawerController extends ChangeNotifier {
   Future<void> fetchUserData(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/users/me'),
+        Uri.parse('${BaseUrl.baseUrl}/api/users/me'),
         headers: {'Authorization': 'Bearer $token'},
       );
 

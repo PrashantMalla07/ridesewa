@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/const/driver_profile_page.dart';
 import 'package:ridesewa/const/driver_review.dart';
 import 'package:ridesewa/const/earnings.dart';
@@ -42,7 +43,7 @@ class _DriverDrawerState extends State<DriverDrawer> {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.get(
-        'http://localhost:3000/driver/profile/$driveruid',
+        '${BaseUrl.baseUrl}/driver/profile/$driveruid',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       setState(() {
@@ -71,7 +72,7 @@ class _DriverDrawerState extends State<DriverDrawer> {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.get(
-        'http://localhost:3000/api/driver_ratings/driver/$driverUid',
+        '${BaseUrl.baseUrl}/api/driver_ratings/driver/$driverUid',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       if (response.statusCode == 200) {
@@ -120,12 +121,12 @@ Widget _buildPlaceholderProfile() {
             accountName: Row(
               children: [
                 Text(
-                  driver.firstName ?? 'Unknown Driver',
+                  driver.firstName,
                   style: TextStyle(color: Colors.black),
                 ),
                 SizedBox(width: 8.0),
                 Text(
-                  driver.lastName ?? 'Unknown Driver',
+                  driver.lastName,
                   style: TextStyle(color: Colors.black),
                 ),
                 SizedBox(width: 100.0),  // Add some space between name and UID
@@ -138,12 +139,12 @@ Widget _buildPlaceholderProfile() {
             accountEmail: Row(
               children: [
                 Text(
-                  driver.email ?? 'No email',
+                  driver.email,
                   style: TextStyle(color: Colors.black, fontSize: 15.0),
                 ),
                 SizedBox(width: 40.0),  // Add some space between name and UID
                 Text(
-                  driver.phoneNumber ?? 'No phone number',  // Display phone number
+                  driver.phoneNumber,  // Display phone number
                   style: TextStyle(color: Colors.black, fontSize: 14.0),
                 ),
               ],
