@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
-import 'package:ridesewa/BaseUrl.dart';
-import 'package:ridesewa/provider/driverprovider.dart';
 import 'package:ridesewa/provider/widgets/custom_button.dart';
-class RatingScreen extends StatefulWidget {
+
+class UserRatingScreen extends StatefulWidget {
   @override
-  _RatingScreenState createState() => _RatingScreenState();
+  _UserRatingScreenState createState() => _UserRatingScreenState();
 }
 
-class _RatingScreenState extends State<RatingScreen> {
+class _UserRatingScreenState extends State<UserRatingScreen> {
   double _experienceRating = 0.0;
   double _driverRating = 0.0;
   TextEditingController _feedbackController = TextEditingController();
@@ -18,48 +15,16 @@ class _RatingScreenState extends State<RatingScreen> {
   // Predefined feedback suggestions
   List<String> feedbackSuggestions = [
     "Great ride experience",
-    "User was polite and respectful" ,
-    "Clear instructions about destination",
-    "Easy to communicate with",
-    "Friendly and cooperative",
-    "Treated the vehicle with care",
-    "Smooth and hassle-free trip",
-    "Helpful and understanding",
-    "Good payment behavior",
-    "Understanding in case of delays",
-    "Did not distract the driver",
-
+    "Friendly driver",
+    "Clean vehicle",
+    "Punctual driver",
+    "Smooth ride",
+    "Driver was very helpful",
+    "Vehicle was comfortable",
+    "Would recommend to others",
+    "Good communication",
+    "Quick and efficient service"
   ];
-  Future<void> submitFeedback() async {
-    final feedbackData = {
-       
-      "driver_rating": _driverRating,
-      "driver_review": _feedbackController.text,
-    };
-    final driverProvider = Provider.of<DriverProvider>(context, listen: false);
-      final String? driveruid = driverProvider.driver?.uid?.toString();
-    final url = '${BaseUrl.baseUrl}/api/reviews';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Feedback submitted successfully')),
-        );
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit feedback')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
-  }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +51,7 @@ class _RatingScreenState extends State<RatingScreen> {
               SizedBox(height: 20),
               
               // Rate the Driver
-              Text('Please rate the User', style: TextStyle(fontSize: 18)),
+              Text('Please rate the driver', style: TextStyle(fontSize: 18)),
               SizedBox(height: 10),
               _buildStarRating(_driverRating, (rating) {
                 setState(() {
@@ -138,7 +103,7 @@ class _RatingScreenState extends State<RatingScreen> {
                       ),
                     ),
                   );
-                  Navigator.popUntil(context, (route) => route.isFirst);
+                  Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
                 },
               ),
             ],

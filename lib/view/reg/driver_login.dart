@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ridesewa/controller/driver_login_controller.dart';
+import 'package:ridesewa/view/introScreen/selecton.dart';
 
 class DriverLogin extends StatefulWidget {
   @override
@@ -95,10 +96,13 @@ class _DriverLoginState extends State<DriverLogin> {
                 // Forgot Password
                 TextButton(
                   onPressed: () {
-                    // Handle forgot password
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SelectionScreen()),
+                  );
                   },
                   child: Text(
-                    'Forgot your password?',
+                    'Go to Driver Or Passenger Page?',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),

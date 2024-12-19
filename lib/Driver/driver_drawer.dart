@@ -79,7 +79,7 @@ class _DriverDrawerState extends State<DriverDrawer> {
         final dynamic averageRating = response.data['average_rating'];
         if (averageRating is num || (averageRating is String && double.tryParse(averageRating) != null)) {
           setState(() {
-            _averageRating = double.parse(averageRating.toString());
+            _averageRating = double.parse(averageRating.toString())?? 5.0;
             _isLoading = false;
           });
         } else {
@@ -142,11 +142,7 @@ Widget _buildPlaceholderProfile() {
                   driver.email,
                   style: TextStyle(color: Colors.black, fontSize: 15.0),
                 ),
-                SizedBox(width: 40.0),  // Add some space between name and UID
-                Text(
-                  driver.phoneNumber,  // Display phone number
-                  style: TextStyle(color: Colors.black, fontSize: 14.0),
-                ),
+               
               ],
             ),
             currentAccountPicture: ClipOval(
@@ -191,7 +187,11 @@ Widget _buildPlaceholderProfile() {
                                 size: 30, // Larger star size
                               ),
                               SizedBox(width: 8), // Space between the star and the rating
-                              Text('$_averageRating'),
+                              Text(
+                  _averageRating != null
+                      ? '$_averageRating'
+                      : '5.0', // Show default rating if no data
+                ),
                             ],
                           )
                         : Center(child: Text('No rating data available')),
@@ -202,7 +202,7 @@ Widget _buildPlaceholderProfile() {
           // Navigation Items
           ListTile(
             leading: const Icon(Icons.dashboard),
-            title: const Text("Dashboard"),
+            title: const Text("Home"),
             onTap: () {
               Navigator.pop(context); // Close the drawer
               // Navigate to Dashboard

@@ -38,10 +38,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     try {
       final response = await http.get(
         Uri.parse('${BaseUrl.baseUrl}/api/admin-dashboard/pending-drivers'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        
       );
 
       if (response.statusCode == 200) {

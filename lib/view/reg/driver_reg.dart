@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:ridesewa/BaseUrl.dart';
 import 'package:ridesewa/view/reg/driver_login.dart';
 
 class DriverRegisterScreen extends StatefulWidget {
@@ -56,7 +57,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
       print("First Name: ${firstNameController.text}");
       
       // Prepare the registration and verification data
-      final uri = Uri.parse('http://localhost:3000/api/driver-register');
+      final uri = Uri.parse('${BaseUrl.baseUrl}/api/driver-register');
       final request = http.MultipartRequest('POST', uri)
         ..fields['firstName'] = firstNameController.text
         ..fields['lastName'] = lastNameController.text
@@ -275,6 +276,27 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
                   backgroundColor: const Color(0xFF001A72),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                ),
+              ),
+              SizedBox(height: 20),
+               Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/driver-login');
+                  },
+                  child: RichText(
+                    text: TextSpan(
+                      text: "Already have an account? ",
+                      style: TextStyle(color: Colors.grey),
+                      children: [
+                        TextSpan(
+                          text: "Login",
+                          style: TextStyle(
+                              color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

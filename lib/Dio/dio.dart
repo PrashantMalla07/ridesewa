@@ -80,7 +80,7 @@ Future<void> changePassword() async {
 Future<void> loginDriver(String identifier, String password) async {
   try {
     final response = await dio.post(
-      'http://localhost:3000/api/driver-login', // Use 10.0.2.2 for Android emulator
+      'http://10.0.2.2:3000/api/driver-login', // Use 10.0.2.2 for Android emulator
       data: {
         'email': identifier, // Or 'phoneNumber': identifier depending on the input
         'password': password,

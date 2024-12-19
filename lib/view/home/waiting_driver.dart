@@ -4,10 +4,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import 'package:ridesewa/Driver/accept_ride.dart'; // Assuming this is where RideAcceptedPage is
+import 'package:ridesewa/BaseUrl.dart';
+import 'package:ridesewa/Driver/accept_ride.dart';
 import 'package:ridesewa/view/home/HomeView.dart';
 
 class WaitingForDriverScreen extends StatefulWidget {
+  final int rideRequestId;
+
+  WaitingForDriverScreen({required this.rideRequestId});
+
   @override
   _WaitingForDriverScreenState createState() => _WaitingForDriverScreenState();
 }
@@ -35,35 +40,49 @@ class _WaitingForDriverScreenState extends State<WaitingForDriverScreen> {
   }
 
   Future<void> _checkRideStatus() async {
-    final rideRequestId = 123; // Replace with actual ride request ID
-    final url = 'http://localhost:3000/api/ride-status/$rideRequestId';
+  final rideRequestId = widget.rideRequestId;
+  final url = '${BaseUrl.baseUrl}/api/ride-status/$rideRequestId';
 
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['status'] == 'accepted') {
+  try {
+    print('Checking ride status...');
+    final response = await http.get(Uri.parse(url));
+    print('Response status: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print('Response data: $data');
+      if (data['status'] == 'accepted') {
+        final driverLocation = data['driver_location'];
+        final pickupLocation = data['pickup_location'];
+        final dropoffLocation = data['dropoff_location'];
+
+        if (driverLocation != null && pickupLocation != null && dropoffLocation != null) {
           setState(() {
             _rideAccepted = true;
           });
-
+          print('Ride accepted, navigating to RideAcceptedPage...');
           _navigateToRideAcceptedPage(
-            LatLng(data['driver_location']['latitude'], data['driver_location']['longitude']),
-            LatLng(data['pickup_location']['latitude'], data['pickup_location']['longitude']),
-            LatLng(data['dropoff_location']['latitude'], data['dropoff_location']['longitude']),
+            LatLng(driverLocation['latitude'], driverLocation['longitude']),
+            LatLng(pickupLocation['latitude'], pickupLocation['longitude']),
+            LatLng(dropoffLocation['latitude'], dropoffLocation['longitude']),
+          );
+        } else {
+          print('Error: One of the locations is null.');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: Missing location data.')),
           );
         }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to check ride status: ${response.statusCode}')),
-        );
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Failed to check ride status: ${response.statusCode}')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
   }
+}
 
   void _navigateToRideAcceptedPage(LatLng driverLocation, LatLng userLocation, LatLng destination) {
     Navigator.pushAndRemoveUntil(

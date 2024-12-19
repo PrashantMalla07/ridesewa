@@ -62,7 +62,7 @@ class _AppDrawerState extends State<AppDrawer> {
         final dynamic averageRating = response.data['average_rating'];
         if (averageRating is num || (averageRating is String && double.tryParse(averageRating) != null)) {
           setState(() {
-            _averageRating = double.parse(averageRating.toString());
+            _averageRating = double.parse(averageRating.toString())?? 5.0;
             _isLoading = false;
           });
         } else {
@@ -175,7 +175,11 @@ Widget _buildPlaceholderProfile() {
                                 size: 30,
                               ),
                               SizedBox(width: 8),
-                              Text('$_averageRating'),
+                              Text(
+                  _averageRating != null
+                      ? '$_averageRating'
+                      : '5.0', // Show default rating if no data
+                ),
                             ],
                           )
                         : Center(child: Text('No rating data available')),
@@ -183,7 +187,7 @@ Widget _buildPlaceholderProfile() {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.dashboard),
-            title: const Text("Dashboard"),
+            title: const Text("Home"),
             onTap: () {
               Navigator.pop(context); // Close the drawer
               Navigator.pushReplacementNamed(context, '/home');

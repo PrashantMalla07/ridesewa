@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ridesewa/Driver/rating.dart';
+import 'package:khalti_flutter/khalti_flutter.dart';
+import 'package:ridesewa/view/profile/user_rating.dart';
 
 class PaymentPage extends StatefulWidget {
   final double price;
@@ -13,22 +14,82 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   String? _selectedPaymentMethod = 'Khalti'; // Default payment method
 
-  // Simulate Khalti integration and Cash selection
+  // Proceed to payment
   void _onProceedToPayment() {
     if (_selectedPaymentMethod == 'Khalti') {
-      // Simulate opening Khalti payment page
-      // For now, this is a simple placeholder
-      // You can integrate Khalti's SDK here for real payment.
-      print('Proceeding with Khalti Payment...');
-      // Open Khalti payment method (this would usually open a Khalti SDK integration)
-      // Here you might navigate to Khalti payment page or call an API for Khalti payment
+      _payWithKhalti();
     } else if (_selectedPaymentMethod == 'Cash') {
-      // Navigate to Rating page if Cash is selected
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => RatingScreen()),
+        MaterialPageRoute(builder: (context) => UserRatingScreen()),
       );
     }
+  }
+
+  // Khalti payment integration
+  void _payWithKhalti() {
+    KhaltiScope.of(context).pay(
+      config: PaymentConfig(
+        amount: (widget.price * 100).toInt(), // Khalti requires the amount in paisa
+        productIdentity: 'ride_payment_${DateTime.now().millisecondsSinceEpoch}',
+        productName: 'Ride Payment',
+      ),
+      preferences: [
+        PaymentPreference.khalti,
+        PaymentPreference.eBanking,
+        PaymentPreference.mobileBanking,
+        PaymentPreference.connectIPS,
+        PaymentPreference.sct,
+      ],
+      onSuccess: (success) {
+        // Handle successful payment
+        print('Payment Successful! Token: ${success.token}');
+        _showPaymentSuccessDialog();
+      },
+      onFailure: (failure) {
+        // Handle failed payment
+        print('Payment Failed: ${failure.message}');
+        _showPaymentFailureDialog();
+      },
+    );
+  }
+
+  void _showPaymentSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Payment Successful'),
+        content: Text('Your payment was successful.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserRatingScreen()),
+              );
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentFailureDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Payment Failed'),
+        content: Text('There was an issue with your payment.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Try Again'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -166,4 +227,3 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 }
-

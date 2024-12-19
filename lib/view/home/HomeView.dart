@@ -144,7 +144,15 @@ class _HomeViewState extends State<HomeView> {
     });
   }
   
- void _onMapTap(LatLng tappedLocation) {
+void _onMapTap(LatLng tappedLocation) {
+  // Calculate the distance between the tapped location and the current location
+  final distanceToCurrent = Geolocator.distanceBetween(
+    _currentLocation.latitude,
+    _currentLocation.longitude,
+    tappedLocation.latitude,
+    tappedLocation.longitude,
+  );
+
   if (_destinationLocation != null) {
     // Check if the tap is on the current destination
     final distanceToDestination = Geolocator.distanceBetween(
@@ -162,35 +170,42 @@ class _HomeViewState extends State<HomeView> {
       print("Destination removed.");
       return; // Exit early
     }
+
+    // Check if the tap is within the defined radius of the destination
+    if (distanceToDestination <= _radiusInMeters) {
+      setState(() {
+        _destinationLocation = tappedLocation;
+        _mapController.move(tappedLocation, _currentZoom);
+      });
+      print("Destination updated within radius.");
+      return;
+    }
   }
 
-  // Calculate the distance between the tapped location and the current location
-  final distanceToCurrent = Geolocator.distanceBetween(
-    _currentLocation.latitude,
-    _currentLocation.longitude,
-    tappedLocation.latitude,
-    tappedLocation.longitude,
-  );
+  // Check if the tap is within the defined radius of the current location
+  if (distanceToCurrent <= _radiusInMeters) {
+    setState(() {
+      _currentLocation = tappedLocation;
+      _mapController.move(tappedLocation, _currentZoom);
+    });
+    print("Pickup point set within radius.");
+    return;
+  }
 
+  // If the destination is not set, set it to the tapped location
   if (_destinationLocation == null) {
-    // Set the destination location
     setState(() {
       _destinationLocation = tappedLocation;
       _mapController.move(tappedLocation, _currentZoom);
     });
     print("Destination set.");
-  } else if (distanceToCurrent <= 100) {
-    // Set the current location if within 100 meters
-    setState(() {
-      _currentLocation = tappedLocation;
-      _mapController.move(tappedLocation, _currentZoom);
-    });
-    print("Pickup point set.");
   } else {
-    // Optionally, provide feedback if tap is too far
-    print("Tap is too far from the current location to be the pickup point.");
+    // Optionally, provide feedback if tap is too far from both locations
+    print("Tap is too far from both the current location and the destination to update.");
   }
 }
+
+
   @override
   void initState() {
     super.initState();
@@ -243,7 +258,16 @@ class _HomeViewState extends State<HomeView> {
                 borderColor: Colors.blue,
                 radius: _radiusInMeters,  // 100 meter radius
               ),
+              if (_destinationLocation != null)
+                      CircleMarker(
+                        point: _destinationLocation!,
+                        color: Colors.red.withOpacity(0.1),
+                        borderStrokeWidth: 2,
+                        borderColor: Colors.red,
+                        radius: _radiusInMeters,
+                      ),
             ],
+            
           ),
               MarkerLayer(
                 markers: [
@@ -494,48 +518,53 @@ Future<void> _findDriver() async {
     print('User ID not found.');
     return;
   }
-  // Prepare the ride request data
-final rideRequest = {
-  "user_id": userid, // Use correct user ID
-  "pickup_location": {
-    "latitude": _currentLocation.latitude,
-    "longitude": _currentLocation.longitude,
-  },
-  "dropoff_location": {
-    "latitude": _destinationLocation!.latitude,
-    "longitude": _destinationLocation!.longitude,
-  },
-  "preferred_vehicle_type": _selectedRide,
-};
 
+  // Prepare the ride request data
+  final rideRequest = {
+    "user_id": userid,
+    "pickup_location": {
+      "latitude": _currentLocation.latitude,
+      "longitude": _currentLocation.longitude,
+    },
+    "dropoff_location": {
+      "latitude": _destinationLocation!.latitude,
+      "longitude": _destinationLocation!.longitude,
+    },
+    "preferred_vehicle_type": _selectedRide,
+  };
 
   try {
     // Send the ride request to the server
-// Send the ride request to the server
-final response = await http.post(
-  Uri.parse('${BaseUrl.baseUrl}/api/ride-requests'), // Use HTTP instead of HTTPS
-  headers: {'Content-Type': 'application/json'},
-  body: json.encode(rideRequest),
-);
+    final response = await http.post(
+      Uri.parse('${BaseUrl.baseUrl}/api/ride-requests'), // Use HTTP instead of HTTPS
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(rideRequest),
+    );
 
+    // Check if the response status is 200 or 201
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print('Ride request sent successfully!');
+      final responseData = jsonDecode(response.body);
+      final rideRequestId = responseData['rideRequestId']; // Assuming the server returns the ride request ID
 
-// Check if the response status is 200 or 201
-if (response.statusCode == 200 || response.statusCode == 201) {
-  print('Ride request sent successfully!');
-  
-  // Navigate to the WaitingForDriverScreen once the ride request is sent
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => WaitingForDriverScreen()),
-  );
-  
-  // Call the function to search for a driver
-  _searchForDriver();
-} else {
-  print('Failed to send ride request: ${response.statusCode}');
-  print('Response body: ${response.body}');
-}
+      // Check if the rideRequestId is valid
+      if (rideRequestId == null || rideRequestId is! int) {
+        print('Error: Invalid Ride Request ID');
+        return;
+      }
 
+      // Navigate to the WaitingForDriverScreen once the ride request is sent
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => WaitingForDriverScreen(rideRequestId: rideRequestId)),
+      );
+
+      // Call the function to search for a driver
+      _searchForDriver();
+    } else {
+      print('Failed to send ride request: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
   } catch (e) {
     print('Error sending ride request: $e');
   }
@@ -561,7 +590,7 @@ Future<void> _searchForDriver() async {
 
 Future<bool> _simulateDriverSearch() async {
   // Simulate a driver search logic (return true if driver found, false if not)
-  await Future.delayed(Duration(seconds: 1)); // Simulating network request
+  await Future.delayed(Duration(seconds: 5)); // Simulating network request
   return true; // Simulate that a driver was found
 }
 }

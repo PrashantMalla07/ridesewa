@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:ridesewa/controller/LoginController.dart';
+import 'package:ridesewa/view/introScreen/selecton.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -99,10 +100,13 @@ class _LoginViewState extends State<LoginView> {
                 // Forgot Password
                 TextButton(
                   onPressed: () {
-                    // Handle forgot password
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SelectionScreen()),
+                  );
                   },
                   child: const Text(
-                    'Forgot your password?',
+                    'Go to Driver Or Passenger Page',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
